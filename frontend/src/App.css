@@ -1,184 +1,289 @@
-.counter {
-  font-size: 16px;
-  padding: 5px 10px;
-  border-radius: 5px;
-  color: var(--accent);
-  background: var(--accent-bg);
-  border: 2px solid transparent;
-  transition: border-color 0.3s;
-  margin-bottom: 24px;
-
-  &:hover {
-    border-color: var(--accent-border);
-  }
-  &:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
+:root {
+  --bg-primary: #0f0f0f;
+  --bg-secondary: #171717;
+  --accent-gold: #e1cf7e;
+  --text-white: #f5f5f5;
+  --text-muted: #aaaaaa;
 }
 
-.hero {
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-white);
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  overflow-x: hidden;
+}
+
+.site-wrapper {
   position: relative;
-
-  .base,
-  .framework,
-  .vite {
-    inset-inline: 0;
-    margin: 0 auto;
-  }
-
-  .base {
-    width: 170px;
-    position: relative;
-    z-index: 0;
-  }
-
-  .framework,
-  .vite {
-    position: absolute;
-  }
-
-  .framework {
-    z-index: 1;
-    top: 34px;
-    height: 28px;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(44deg) rotateY(39deg)
-      scale(1.4);
-  }
-
-  .vite {
-    z-index: 0;
-    top: 107px;
-    height: 26px;
-    width: auto;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(40deg) rotateY(39deg)
-      scale(0.8);
-  }
-}
-
-#center {
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  gap: 25px;
-  place-content: center;
-  place-items: center;
-  flex-grow: 1;
-
-  @media (max-width: 1024px) {
-    padding: 32px 20px 24px;
-    gap: 18px;
-  }
+  width: 100%; /* Strict full screen constraint */
 }
 
-#next-steps {
+/* Background Configuration */
+.placeholder-bg-gradient {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -2;
+  background: linear-gradient(135deg, #0f0f0f 0%, #151221 100%);
+}
+
+.video-tint {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 15, 15, 0.6);
+  z-index: -1;
+}
+
+/* Full Width Header Banner configuration */
+.main-banner {
+  width: 100%;
+  padding: 20px;
+  background: rgba(15, 15, 15, 0.85);
+  backdrop-filter: blur(10px);
   display: flex;
-  border-top: 1px solid var(--border);
-  text-align: left;
-
-  & > div {
-    flex: 1 1 0;
-    padding: 32px;
-    @media (max-width: 1024px) {
-      padding: 24px 20px;
-    }
-  }
-
-  .icon {
-    margin-bottom: 16px;
-    width: 22px;
-    height: 22px;
-  }
-
-  @media (max-width: 1024px) {
-    flex-direction: column;
-    text-align: center;
-  }
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-#docs {
-  border-right: 1px solid var(--border);
-
-  @media (max-width: 1024px) {
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-  }
+.logo-area h1 {
+  font-size: 1.6rem;
+  letter-spacing: 6px;
+  font-weight: 900;
+  color: var(--accent-gold);
 }
 
-#next-steps ul {
-  list-style: none;
-  padding: 0;
+/* Grid layout for sleek sizing of icons */
+.socials-nav {
+  display: flex;
+  gap: 20px;
+}
+
+.social-icon-link {
+  color: var(--text-muted);
+  font-size: 1.35rem; /* Clean, bold sizing for mobile fingers */
+  display: flex;
+  align-items: center;
+  transition: color 0.2s, transform 0.2s;
+}
+
+.social-icon-link:hover {
+  color: var(--accent-gold);
+  transform: scale(1.1);
+}
+
+/* Middle Screen Landing Presentation */
+.content-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 20px;
+  width: 100%;
+}
+
+.hero-cta-box {
+  text-align: center;
+}
+
+.artist-tagline {
+  font-size: 0.9rem;
+  letter-spacing: 4px;
+  color: var(--text-muted);
+  margin-bottom: 15px;
+}
+
+.trigger-btn {
+  padding: 16px 32px;
+  font-size: 1rem;
+  border-radius: 50px; /* Rounded pill style */
+  box-shadow: 0 4px 20px rgba(225, 207, 126, 0.2);
+}
+
+/* --- Modal Architecture Layer --- */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+  padding: 15px;
+}
+
+.form-card {
+  background: var(--bg-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 30px 20px;
+  width: 100%;
+  max-width: 480px;
+  position: relative;
+}
+
+/* Quick Animation for Popup effect */
+.modal-content {
+  animation: modalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalPop {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.close-modal-btn {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 2rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.close-modal-btn:hover {
+  color: var(--text-white);
+}
+
+/* Forms layout matching style rules */
+.form-card h2 {
+  font-size: 1.4rem;
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+}
+
+.subtitle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+.booking-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.booking-form input, 
+.booking-form textarea {
+  width: 100%;
+  background: #0a0a0a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 12px;
+  color: var(--text-white);
+}
+
+.booking-form input:focus, 
+.booking-form textarea:focus {
+  outline: none;
+  border-color: var(--accent-gold);
+}
+
+.booking-form textarea {
+  min-height: 80px;
+}
+
+.compliance-checkbox {
   display: flex;
   gap: 8px;
-  margin: 32px 0 0;
-
-  .logo {
-    height: 18px;
-  }
-
-  a {
-    color: var(--text-h);
-    font-size: 16px;
-    border-radius: 6px;
-    background: var(--social-bg);
-    display: flex;
-    padding: 6px 12px;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    transition: box-shadow 0.3s;
-
-    &:hover {
-      box-shadow: var(--shadow);
-    }
-    .button-icon {
-      height: 18px;
-      width: 18px;
-    }
-  }
-
-  @media (max-width: 1024px) {
-    margin-top: 20px;
-    flex-wrap: wrap;
-    justify-content: center;
-
-    li {
-      flex: 1 1 calc(50% - 8px);
-    }
-
-    a {
-      width: 100%;
-      justify-content: center;
-      box-sizing: border-box;
-    }
-  }
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  cursor: pointer;
 }
 
-#spacer {
-  height: 88px;
-  border-top: 1px solid var(--border);
-  @media (max-width: 1024px) {
-    height: 48px;
-  }
+.gold-button {
+  background-color: var(--accent-gold);
+  color: #000;
+  border: none;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border-radius: 6px;
+  padding: 14px;
 }
 
-.ticks {
-  position: relative;
+.gold-button:hover {
+  background-color: #cfbd69;
+}
+
+.status-banner {
+  margin-top: 12px;
+  font-size: 0.85rem;
+  color: var(--accent-gold);
+  text-align: center;
+}
+
+/* Full Width Legal Footer layout rules */
+.legal-footer {
   width: 100%;
+  background: #0a0a0a;
+  padding: 20px;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
 
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    top: -4.5px;
-    border: 5px solid transparent;
+.legal-links {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.legal-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+/* Desktop Expansion Mode overrides standard centered bounds */
+@media (min-width: 768px) {
+  .main-banner {
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 25px 5%; /* Fluid width edge containment */
   }
 
-  &::before {
-    left: 0;
-    border-left-color: var(--border);
+  .logo-area h1 {
+    font-size: 1.8rem;
   }
-  &::after {
-    right: 0;
-    border-right-color: var(--border);
+
+  .social-icon-link {
+    font-size: 1.5rem; /* Clean scale upward for mouse pointers */
+  }
+
+  .legal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 5%;
+  }
+
+  .legal-links {
+    margin-top: 0;
   }
 }
