@@ -28,14 +28,14 @@ body {
 }
 
 /* Background Configuration */
-.placeholder-bg-gradient {
+.hero-video {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
+  object-fit: cover;
   z-index: -2;
-  background: linear-gradient(135deg, #0f0f0f 0%, #151221 100%);
 }
 
 .video-tint {
@@ -44,28 +44,30 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(15, 15, 15, 0.6);
+  background: rgba(15, 15, 15, 0.65);
   z-index: -1;
 }
 
 /* Full Width Header Banner configuration */
 .main-banner {
   width: 100%;
-  padding: 20px;
+  padding: 5px 20px;
   background: rgba(15, 15, 15, 0.85);
   backdrop-filter: blur(10px);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 15px;
+  gap: 10px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  z-index: 10;
 }
 
-.logo-area h1 {
-  font-size: 1.6rem;
-  letter-spacing: 6px;
-  font-weight: 900;
-  color: var(--accent-gold);
+/* Mobile Logo Size Layout Bounds */
+.brand-logo {
+  height: 95px; /* Adjust this to make it larger or smaller on mobile screens */
+  max-height: 95px;
+  width: auto;
+  display: block;
 }
 
 /* Grid layout for sleek sizing of icons */
@@ -265,11 +267,17 @@ body {
   .main-banner {
     flex-direction: row;
     justify-content: space-between;
-    padding: 25px 5%; /* Fluid width edge containment */
+    padding: 5px 5%; /* Fluid width edge containment */
+    height: px;
   }
 
-  .logo-area h1 {
-    font-size: 1.8rem;
+
+  /* Desktop View Sizing Constraints Override Mobile Definitions Globally */
+  .brand-logo {
+    height: 80px; /* Adjust this to change the logo size on monitors */
+    max-height: 80px;
+    margin-bottom: 10px;
+    transform: translateY(5px);
   }
 
   .social-icon-link {
