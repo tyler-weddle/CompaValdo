@@ -1,26 +1,20 @@
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  /* Dark Theme Palette (Unified from your setups) */
+  --bg-primary: #0f0f0f;
+  --bg-secondary: #171717;
+  --accent-gold: #e1cf7e;
+  --text-white: #f5f5f5;
+  --text-muted: #aaaaaa;
+  --border: #2e303a;
+  --code-bg: #1f2028;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
+  /* Typography Stack - Custom Google Fonts Loaded First */
+  --sans: 'Montserrat', system-ui, Roboto, sans-serif;
+  --heading: 'Playfair Display', system-ui, Roboto, serif;
   --mono: ui-monospace, Consolas, monospace;
 
   font: 18px/145% var(--sans);
   letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -30,47 +24,33 @@
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 body {
-  margin: 0;
+  background-color: var(--bg-primary);
+  color: var(--text-white);
+  font-family: var(--sans);
+  overflow-x: hidden;
 }
 
 #root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
+  width: 100%;
   min-height: 100svh;
+  margin: 0;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
 }
 
-h1,
-h2 {
+/* Base Headings - Forcing your custom font */
+h1, h2, h3, .form-card h2 {
   font-family: var(--heading);
   font-weight: 500;
-  color: var(--text-h);
+  color: var(--text-white);
 }
 
 h1 {
@@ -82,30 +62,292 @@ h1 {
     margin: 20px 0;
   }
 }
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
-  margin: 0;
+
+/* App Core Component Styles */
+.site-wrapper {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+/* Background Elements Layout */
+.hero-video {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+
+.video-tint {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 15, 15, 0.65);
+  z-index: 1;
+  pointer-events: none; /* Allows clicks to cleanly pass straight to layout components */
+}
+
+/* Header Navbar Styling Configuration */
+.main-banner {
+  width: 100%;
+  padding: 5px 20px;
+  background: rgba(15, 15, 15, 0.85);
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  z-index: 10;
+}
+
+.brand-logo {
+  height: 95px;
+  max-height: 95px;
+  width: auto;
+  display: block;
+}
+
+.socials-nav {
+  display: flex;
+  gap: 20px;
+}
+
+.social-icon-link {
+  color: var(--text-muted);
+  font-size: 1.35rem;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s, transform 0.2s;
+}
+
+.social-icon-link:hover {
+  color: var(--accent-gold);
+  transform: scale(1.1);
+}
+
+/* Content Presentational Wrapper */
+.content-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 20px;
+  width: 100%;
+  position: relative;
+  z-index: 10; /* Elevated above the backdrop video asset layers */
+}
+
+.hero-cta-box {
+  text-align: center;
+}
+
+.artist-tagline {
+  font-family: var(--heading); /* Gives the subtext banner tag premium emphasis */
+  font-size: 1.1rem;
+  letter-spacing: 4px;
+  color: var(--text-muted);
+  margin-bottom: 15px;
+}
+
+.trigger-btn {
+  padding: 16px 32px;
+  font-size: 1rem;
+  border-radius: 50px;
+  box-shadow: 0 4px 20px rgba(225, 207, 126, 0.2);
+}
+
+/* --- Interactive Modal Architecture --- */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+  padding: 15px;
+}
+
+.form-card {
+  background: var(--bg-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 30px 20px;
+  width: 100%;
+  max-width: 480px;
+  position: relative;
+}
+
+.form-card h2 {
+  font-size: 1.6rem;
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+}
+
+.modal-content {
+  animation: modalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalPop {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.close-modal-btn {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 2rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.close-modal-btn:hover {
+  color: var(--text-white);
+}
+
+.subtitle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+.booking-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.booking-form input, 
+.booking-form textarea {
+  font-family: var(--sans);
+  width: 100%;
+  background: #0a0a0a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 12px;
+  color: var(--text-white);
+}
+
+.booking-form input:focus, 
+.booking-form textarea:focus {
+  outline: none;
+  border-color: var(--accent-gold);
+}
+
+.booking-form textarea {
+  min-height: 80px;
+}
+
+.compliance-checkbox {
+  display: flex;
+  gap: 8px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.gold-button {
+  font-family: var(--sans);
+  background-color: var(--accent-gold);
+  color: #000;
+  border: none;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border-radius: 6px;
+  padding: 14px;
+}
+
+.gold-button:hover {
+  background-color: #cfbd69;
+}
+
+.status-banner {
+  margin-top: 12px;
+  font-size: 0.85rem;
+  color: var(--accent-gold);
+  text-align: center;
+}
+
+/* Legal Footer Structure Configuration */
+.legal-footer {
+  width: 100%;
+  background: #0a0a0a;
+  padding: 20px;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.legal-links {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.legal-links a {
+  color: var(--text-muted);
+  text-decoration: none;
 }
 
 code {
+  font-family: var(--mono);
   font-size: 15px;
   line-height: 135%;
   padding: 4px 8px;
   background: var(--code-bg);
+}
+
+/* Desktop Target Breakpoint Adjustments */
+@media (min-width: 768px) {
+  .main-banner {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 100vw;
+    max-width: 100%;
+    padding: 0 50px;
+    height: 90px;
+  }
+
+  .brand-logo {
+    height: 70px;
+    max-height: 70px;
+    margin-bottom: 0;
+    transform: none;
+  }
+
+  .social-icon-link {
+    font-size: 1.5rem;
+  }
+
+  .legal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 50px;
+  }
+
+  .legal-links {
+    margin-top: 0;
+  }
 }

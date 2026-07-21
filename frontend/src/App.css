@@ -1,9 +1,28 @@
 :root {
+  /* Dark Theme Palette */
   --bg-primary: #0f0f0f;
   --bg-secondary: #171717;
   --accent-gold: #e1cf7e;
   --text-white: #f5f5f5;
   --text-muted: #aaaaaa;
+  --border: #2e303a;
+
+  /* Typography Stack */
+  --sans: 'Montserrat', system-ui, Roboto, sans-serif;
+  --heading: 'Chomsky', serif;
+  --mono: ui-monospace, Consolas, monospace;
+
+  font: 18px/145% var(--sans);
+  letter-spacing: 0.18px;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@media (max-width: 1024px) {
+  :root {
+    font-size: 16px;
+  }
 }
 
 * {
@@ -15,8 +34,24 @@
 body {
   background-color: var(--bg-primary);
   color: var(--text-white);
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--sans);
   overflow-x: hidden;
+  margin: 0;
+}
+
+#root {
+  width: 100%;
+  min-height: 100svh;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+h1, h2, h3, .form-card h2 {
+  font-family: var(--heading);
+  font-weight: 700;
+  color: var(--text-white);
 }
 
 .site-wrapper {
@@ -24,10 +59,9 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  width: 100%; /* Strict full screen constraint */
+  width: 100%;
 }
 
-/* Background Configuration */
 .hero-video {
   position: fixed;
   top: 0;
@@ -46,9 +80,9 @@ body {
   height: 100%;
   background: rgba(15, 15, 15, 0.65);
   z-index: 1;
+  pointer-events: none;
 }
 
-/* Full Width Header Banner configuration */
 .main-banner {
   width: 100%;
   padding: 5px 20px;
@@ -62,15 +96,13 @@ body {
   z-index: 10;
 }
 
-/* Mobile Logo Size Layout Bounds */
 .brand-logo {
-  height: 95px; /* Adjust this to make it larger or smaller on mobile screens */
+  height: 95px;
   max-height: 95px;
   width: auto;
   display: block;
 }
 
-/* Grid layout for sleek sizing of icons */
 .socials-nav {
   display: flex;
   gap: 20px;
@@ -78,7 +110,7 @@ body {
 
 .social-icon-link {
   color: var(--text-muted);
-  font-size: 1.35rem; /* Clean, bold sizing for mobile fingers */
+  font-size: 1.35rem;
   display: flex;
   align-items: center;
   transition: color 0.2s, transform 0.2s;
@@ -89,7 +121,6 @@ body {
   transform: scale(1.1);
 }
 
-/* Middle Screen Landing Presentation */
 .content-container {
   flex: 1;
   display: flex;
@@ -97,27 +128,24 @@ body {
   align-items: center;
   padding: 40px 20px;
   width: 100%;
+  position: relative;
+  z-index: 10;
 }
 
 .hero-cta-box {
   text-align: center;
 }
 
-.artist-tagline {
-  font-size: 0.9rem;
-  letter-spacing: 4px;
-  color: var(--text-muted);
-  margin-bottom: 15px;
-}
-
 .trigger-btn {
-  padding: 16px 32px;
-  font-size: 1rem;
-  border-radius: 50px; /* Rounded pill style */
-  box-shadow: 0 4px 20px rgba(225, 207, 126, 0.2);
+  font-family: var(--heading) !important;
+  font-weight: 700;
+  padding: 18px 36px;
+  font-size: 1.1rem;
+  border-radius: 50px;
+  box-shadow: 0 4px 25px rgba(225, 207, 126, 0.25);
+  letter-spacing: 1px;
 }
 
-/* --- Modal Architecture Layer --- */
 .modal-backdrop {
   position: fixed;
   top: 0;
@@ -143,14 +171,10 @@ body {
   position: relative;
 }
 
-/* Quick Animation for Popup effect */
-.modal-content {
-  animation: modalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes modalPop {
-  from { transform: scale(0.95); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+.form-card h2 {
+  font-size: 1.6rem;
+  letter-spacing: 2px;
+  margin-bottom: 6px;
 }
 
 .close-modal-btn {
@@ -169,27 +193,15 @@ body {
   color: var(--text-white);
 }
 
-/* Forms layout matching style rules */
-.form-card h2 {
-  font-size: 1.4rem;
-  letter-spacing: 2px;
-  margin-bottom: 6px;
-}
-
-.subtitle {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  margin-bottom: 20px;
-}
-
 .booking-form {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 8px;
 }
 
 .booking-form input, 
 .booking-form textarea {
+  font-family: var(--sans);
   width: 100%;
   background: #0a0a0a;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -210,13 +222,58 @@ body {
 
 .compliance-checkbox {
   display: flex;
-  gap: 8px;
-  font-size: 0.75rem;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.8rem;
   color: var(--text-muted);
   cursor: pointer;
+  user-select: none;
+  margin: 5px 0;
+  text-align: left;
+}
+
+.compliance-checkbox input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  background: #0a0a0a;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  cursor: pointer;
+  display: grid;
+  place-content: center;
+  transition: all 0.2s ease;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.compliance-checkbox:hover input[type="checkbox"] {
+  border-color: var(--accent-gold);
+}
+
+.compliance-checkbox input[type="checkbox"]:checked {
+  background: rgba(225, 207, 126, 0.1);
+  border-color: var(--accent-gold);
+}
+
+.compliance-checkbox input[type="checkbox"]::before {
+  content: "";
+  width: 10px;
+  height: 6px;
+  border-left: 2px solid var(--accent-gold);
+  border-bottom: 2px solid var(--accent-gold);
+  transform: rotate(-45deg) scale(0);
+  transition: transform 0.1s ease-in-out;
+  margin-bottom: 2px;
+}
+
+.compliance-checkbox input[type="checkbox"]:checked::before {
+  transform: rotate(-45deg) scale(1);
 }
 
 .gold-button {
+  font-family: var(--sans);
   background-color: var(--accent-gold);
   color: #000;
   border: none;
@@ -225,7 +282,7 @@ body {
   cursor: pointer;
   transition: background-color 0.2s;
   border-radius: 6px;
-  padding: 14px;
+  padding: 14px 28px;
 }
 
 .gold-button:hover {
@@ -239,7 +296,30 @@ body {
   text-align: center;
 }
 
-/* Full Width Legal Footer layout rules */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px; 
+  margin-bottom: 2px; 
+  width: 100%;
+}
+
+.field-error-msg {
+  color: #ff4d4d;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-align: left;
+  letter-spacing: 0.5px;
+  margin-top: 0px; 
+  margin-bottom: 0px;
+  animation: fieldFadeIn 0.2s ease-out;
+}
+
+@keyframes fieldFadeIn {
+  from { opacity: 0; transform: translateY(-3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .legal-footer {
   width: 100%;
   background: #0a0a0a;
@@ -262,33 +342,33 @@ body {
   text-decoration: none;
 }
 
-/* Desktop Expansion Mode overrides standard centered bounds */
 @media (min-width: 768px) {
   .main-banner {
     flex-direction: row;
     justify-content: space-between;
-    padding: 5px 5%; /* Fluid width edge containment */
-    height: px;
+    align-items: center;
+    width: 100vw;
+    max-width: 100%;
+    padding: 0 50px;
+    height: 90px;
   }
 
-
-  /* Desktop View Sizing Constraints Override Mobile Definitions Globally */
   .brand-logo {
-    height: 80px; /* Adjust this to change the logo size on monitors */
-    max-height: 80px;
-    margin-bottom: 10px;
-    transform: translateY(5px);
+    height: 70px;
+    max-height: 70px;
+    margin-bottom: 0;
+    transform: none;
   }
 
   .social-icon-link {
-    font-size: 1.5rem; /* Clean scale upward for mouse pointers */
+    font-size: 1.5rem;
   }
 
   .legal-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 20px 5%;
+    padding: 20px 50px;
   }
 
   .legal-links {
