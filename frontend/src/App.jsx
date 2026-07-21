@@ -70,7 +70,7 @@ function App() {
   return (
     <div className="site-wrapper">
       <video autoPlay loop muted playsInline preload="auto" className="hero-video">
-        <source src="/video2.mp4" type="video/mp4" />
+        <source src="/video3.mp4" type="video/mp4" />
       </video>
       <div className="video-tint"></div>
 
