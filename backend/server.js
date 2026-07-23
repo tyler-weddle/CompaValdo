@@ -13,16 +13,13 @@ app.use(
   })
 );
 
-// 2. Clean, non-crashing CORS setup
+// 2. Clean CORS setup (handles preflight OPTIONS automatically)
 app.use(cors({
-  origin: true, // Automatically mirrors the requesting origin (Vercel, Localhost, Custom Domain, etc.)
+  origin: true, // Automatically mirrors requesting origin
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
-
-// Handle Preflight OPTIONS explicitly
-app.options('*', cors());
 
 app.use(express.json());
 
