@@ -34,8 +34,11 @@ function App() {
     setErrors({}); // Wipe out previous red warnings on new submit
     setStatus('Enviando...');
     
+    // Dynamic API URL: Uses Vercel environment variable if set, defaults to localhost for local dev
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    
     try {
-      const response = await fetch('http://localhost:5000/api/booking', {
+      const response = await fetch(`${API_BASE_URL}/api/booking`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...formData, smsOptIn: optIn }),
@@ -56,7 +59,8 @@ function App() {
           setStatus('Error.');
         }
       }
-    } catch { 
+    } catch (err) { 
+      console.error('Fetch error:', err);
       setStatus('Error de conexión.'); 
     }
   };
@@ -69,7 +73,7 @@ function App() {
 
   return (
     <div className="site-wrapper">
-      <video autoPlay loop muted playsInline preload="auto" className="hero-video">
+      <video autoPlay loop muted playsInline preload="auto" className="hero-video" ref={videoRef}>
         <source src="/video3.mp4" type="video/mp4" />
       </video>
       <div className="video-tint"></div>
