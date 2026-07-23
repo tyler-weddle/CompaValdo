@@ -6,39 +6,23 @@ const { Resend } = require('resend');
 
 const app = express();
 
-// 1. Helmet configuration (relaxed for cross-origin API calls)
+// 1. Helmet setup (relaxed for cross-origin API requests)
 app.use(
   helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" }
   })
 );
 
-// 2. Dynamic CORS configuration
-const rawFrontendUrl = process.env.FRONTEND_URL || '';
-const cleanFrontendUrl = rawFrontendUrl.replace(/\/$/, ''); // Removes trailing slash if present
+// 2. Clean, non-crashing CORS setup
+app.use(cors({
+  origin: true, // Automatically mirrors the requesting origin (Vercel, Localhost, Custom Domain, etc.)
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
 
-const allowedOrigins = [
-  cleanFrontendUrl,
-  `${cleanFrontendUrl}/`,
-  'http://localhost:5173',
-  'http://localhost:3000'
-].filter(Boolean);
-
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps, Postman, or server-to-server)
-      if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
-        return callback(null, true);
-      }
-      console.warn(`Blocked by CORS: ${origin}`);
-      return callback(new Error('CORS Policy: Origin not allowed'));
-    },
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true
-  })
-);
+// Handle Preflight OPTIONS explicitly
+app.options('*', cors());
 
 app.use(express.json());
 
@@ -51,7 +35,7 @@ if (!process.env.RESEND_API_KEY) {
 // Initialize Resend
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Health Check Endpoint (Useful to test if Render is awake)
+// Health Check Endpoint
 app.get('/', (req, res) => {
   res.status(200).send('CompaValdo Backend API is Live');
 });
