@@ -34,11 +34,19 @@ function App() {
     setErrors({}); // Wipe out previous red warnings on new submit
     setStatus('Enviando...');
     
-    // Dynamic API URL: Uses Vercel environment variable if set, defaults to localhost for local dev
-    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    // 1. Grab raw environment variable or fallback to local Express server
+    let baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000').trim();
+    
+    // 2. Ensure standard protocol prefix
+    if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
+      baseUrl = `https://${baseUrl}`;
+    }
+    
+    // 3. Strip any trailing slashes to prevent double-slash paths
+    baseUrl = baseUrl.replace(/\/+$/, '');
     
     try {
-      const response = await fetch(`${API_BASE_URL}/api/booking`, {
+      const response = await fetch(`${baseUrl}/api/booking`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...formData, smsOptIn: optIn }),
