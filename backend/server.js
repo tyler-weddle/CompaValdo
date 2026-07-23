@@ -1,4 +1,4 @@
-require('dotenv').config(); // MUST run before using process.env
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -8,17 +8,42 @@ const app = express();
 
 // Middleware Configuration
 app.use(helmet());
-app.use(cors());
+
+// 1. Explicit CORS configuration
+const allowedOrigins = [
+  process.env.FRONTEND_URL, // e.g. 'https://compavaldo.vercel.app'
+  'http://localhost:5173',
+  'http://localhost:3000'
+].filter(Boolean);
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('CORS Policy: Origin not allowed'));
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+
 app.use(express.json());
 
 // Verify API Key existence
 if (!process.env.RESEND_API_KEY) {
-  console.error("FATAL ERROR: RESEND_API_KEY is not defined in your .env file.");
+  console.error("FATAL ERROR: RESEND_API_KEY is not defined in environment variables.");
   process.exit(1);
 }
 
 // Initialize Resend
 const resend = new Resend(process.env.RESEND_API_KEY);
+
+// Health Check Endpoint (Useful for testing if Render is alive)
+app.get('/', (req, res) => {
+  res.status(200).send('CompaValdo Backend API is Live');
+});
 
 // Booking Endpoint
 app.post('/api/booking', async (req, res) => {
@@ -62,7 +87,7 @@ app.post('/api/booking', async (req, res) => {
 
   // NOTIFICATION LOGIC WITH RESEND
   try {
-    await Promise.all([
+    const emailPromises = [
       // 1. Email to Band Manager
       resend.emails.send({
         from: 'CompaValdo System <onboarding@resend.dev>',
@@ -74,32 +99,39 @@ app.post('/api/booking', async (req, res) => {
               `Correo de Contacto: ${email}\n` +
               `Fecha del Evento: ${date}\n\n` +
               `Detalles del Evento:\n${details}`
-      }),
-
-      // 2. Text Alert via Cricket Wireless Email-to-MMS Gateway
-      resend.emails.send({
-        from: 'CompaValdo System <onboarding@resend.dev>',
-        to: `${process.env.CRICKET_PHONE}@mms.cricketwireless.net`,
-        subject: 'Nueva Reserva',
-        text: `Aviso CompaValdo: Nueva solicitud de ${name} para la fecha: ${date}. Tel: ${phone}`
       })
-    ]);
-    
-    console.log(`Clean Booking processed and Resend notifications sent for: ${name}`);
+    ];
+
+    // Optional Cricket SMS (Only attach if phone is present in env)
+    if (process.env.CRICKET_PHONE) {
+      emailPromises.push(
+        resend.emails.send({
+          from: 'CompaValdo System <onboarding@resend.dev>',
+          to: `${process.env.CRICKET_PHONE}@mms.cricketwireless.net`,
+          subject: 'Nueva Reserva',
+          text: `Aviso CompaValdo: Nueva solicitud de ${name} para la fecha: ${date}. Tel: ${phone}`
+        })
+      );
+    }
+
+    const results = await Promise.all(emailPromises);
+    console.log(`Booking processed successfully for: ${name}`, results);
+
     return res.status(200).json({ 
       success: true, 
       message: "Booking received perfectly." 
     });
   } catch (mailErr) {
-    console.error("Resend notification delivery failed:", mailErr);
+    console.error("Resend notification delivery failed:", mailErr.response?.data || mailErr.message || mailErr);
     return res.status(500).json({
       success: false,
-      message: "Server error sending notifications."
+      message: "Server error sending notifications.",
+      errorDetails: mailErr.message
     });
   }
 });
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Backend validation server is running live on http://localhost:${PORT}`);
+  console.log(`Backend validation server running on port ${PORT}`);
 });
