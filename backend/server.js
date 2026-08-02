@@ -1,4 +1,4 @@
-require('dotenv').config();
+\require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -79,29 +79,39 @@ app.post('/api/booking', async (req, res) => {
 
   // NOTIFICATION LOGIC WITH RESEND
   try {
+    // Custom domain sender email
+    const SENDER_EMAIL = 'CompaValdo System <notifications@compavaldo.com>';
+
+    // Identical message content for both email and text
+    const notificationMessage = 
+      `Se ha recibido una nueva solicitud de contratacion:\n\n` +
+      `Nombre del Cliente: ${name}\n` +
+      `Telefono: ${phone}\n` +
+      `Correo de Contacto: ${email}\n` +
+      `Fecha del Evento: ${date}\n\n` +
+      `Detalles del Evento:\n${details}`;
+
     const emailPromises = [
       // 1. Email to Band Manager
       resend.emails.send({
-        from: 'CompaValdo System <onboarding@resend.dev>',
+        from: SENDER_EMAIL,
         to: process.env.MANAGER_EMAIL,
         subject: `Nueva Solicitud de Contratacion: ${name}`,
-        text: `Se ha recibido una nueva solicitud de contratacion:\n\n` +
-              `Nombre del Cliente: ${name}\n` +
-              `Telefono: ${phone}\n` +
-              `Correo de Contacto: ${email}\n` +
-              `Fecha del Evento: ${date}\n\n` +
-              `Detalles del Evento:\n${details}`
+        text: notificationMessage
       })
     ];
 
-    // Optional Cricket SMS (Only attach if phone is present in env)
+    // 2. Text/MMS to Cricket Phone
     if (process.env.CRICKET_PHONE) {
+      // Ensure phone is strictly 10 digits without leading +1, dashes, or spaces
+      const cleanPhone = process.env.CRICKET_PHONE.replace(/\D/g, '').slice(-10);
+
       emailPromises.push(
         resend.emails.send({
-          from: 'CompaValdo System <onboarding@resend.dev>',
-          to: `${process.env.CRICKET_PHONE}@mms.cricketwireless.net`,
-          subject: 'Nueva Reserva',
-          text: `Aviso CompaValdo: Nueva solicitud de ${name} para la fecha: ${date}. Tel: ${phone}`
+          from: SENDER_EMAIL,
+          to: `${cleanPhone}@mms.cricketwireless.net`,
+          subject: `Nueva Solicitud: ${name}`,
+          text: notificationMessage
         })
       );
     }
