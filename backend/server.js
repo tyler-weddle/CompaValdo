@@ -109,7 +109,7 @@ app.post('/api/booking', async (req, res) => {
       emailPromises.push(
         resend.emails.send({
           from: SENDER_EMAIL,
-          to: `${cleanPhone}@mms.cricketwireless.net`,
+          to: `${cleanPhone}@sms.cricketwireless.net`,
           subject: `Nueva Solicitud: ${name}`,
           text: notificationMessage
         })
