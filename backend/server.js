@@ -79,11 +79,10 @@ app.post('/api/booking', async (req, res) => {
 
   // NOTIFICATION LOGIC WITH RESEND
   try {
-    // Custom domain sender email
     const SENDER_EMAIL = 'CompaValdo System <notifications@compavaldo.com>';
 
-    // Identical message content for both email and text
-    const notificationMessage = 
+    // 1. Full detailed email body for Band Manager
+    const managerEmailBody = 
       `Se ha recibido una nueva solicitud de contratacion:\n\n` +
       `Nombre del Cliente: ${name}\n` +
       `Telefono: ${phone}\n` +
@@ -92,26 +91,28 @@ app.post('/api/booking', async (req, res) => {
       `Detalles del Evento:\n${details}`;
 
     const emailPromises = [
-      // 1. Email to Band Manager
       resend.emails.send({
         from: SENDER_EMAIL,
         to: process.env.MANAGER_EMAIL,
         subject: `Nueva Solicitud de Contratacion: ${name}`,
-        text: notificationMessage
+        text: managerEmailBody
       })
     ];
 
-    // 2. Text/MMS to Cricket Phone
+    // 2. Short, clean string for Cricket Gateway (@sms.cricketwireless.net)
     if (process.env.CRICKET_PHONE) {
-      // Ensure phone is strictly 10 digits without leading +1, dashes, or spaces
+      // Ensure phone is strictly 10 digits without +1, dashes, or spaces
       const cleanPhone = process.env.CRICKET_PHONE.replace(/\D/g, '').slice(-10);
+      
+      // Concise single-line text to bypass carrier email-to-SMS spam blocks
+      const smsText = `CompaValdo: Nueva reserva de ${name} para ${date}. Tel: ${phone}`;
 
       emailPromises.push(
         resend.emails.send({
           from: SENDER_EMAIL,
           to: `${cleanPhone}@sms.cricketwireless.net`,
-          subject: `Nueva Solicitud: ${name}`,
-          text: notificationMessage
+          subject: 'Reserva',
+          text: smsText
         })
       );
     }
