@@ -3,19 +3,20 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const { Resend } = require('resend');
+const webpush = require('web-push');
 
 const app = express();
 
-// 1. Helmet setup (relaxed for cross-origin API requests)
+// 1. Helmet setup
 app.use(
   helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" }
   })
 );
 
-// 2. Clean CORS setup (handles preflight OPTIONS automatically)
+// 2. Clean CORS setup
 app.use(cors({
-  origin: true, // Automatically mirrors requesting origin
+  origin: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
@@ -32,9 +33,52 @@ if (!process.env.RESEND_API_KEY) {
 // Initialize Resend
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+// Configure Web-Push VAPID details
+if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+  webpush.setVapidDetails(
+    'mailto:notifications@compavaldo.com',
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+  );
+}
+
+// In-memory store for admin push subscriptions (Persist in DB for long-term production)
+let pushSubscriptions = [];
+
 // Health Check Endpoint
 app.get('/', (req, res) => {
   res.status(200).send('CompaValdo Backend API is Live');
+});
+
+// Admin Login Endpoint
+app.post('/api/admin/login', (req, res) => {
+  const { password } = req.body;
+  if (password && password === process.env.ADMIN_PASSWORD) {
+    return res.status(200).json({ success: true, message: "Authorized" });
+  }
+  return res.status(401).json({ success: false, message: "Contraseña incorrecta." });
+});
+
+// Register Admin Device for Web Push
+app.post('/api/admin/subscribe', (req, res) => {
+  const { subscription, password } = req.body;
+
+  if (password !== process.env.ADMIN_PASSWORD) {
+    return res.status(401).json({ success: false, message: "Unauthorized" });
+  }
+
+  if (!subscription || !subscription.endpoint) {
+    return res.status(400).json({ success: false, message: "Invalid subscription object." });
+  }
+
+  // Avoid duplicate subscriptions
+  const exists = pushSubscriptions.some(sub => sub.endpoint === subscription.endpoint);
+  if (!exists) {
+    pushSubscriptions.push(subscription);
+  }
+
+  console.log(`New push subscription registered. Total devices: ${pushSubscriptions.length}`);
+  return res.status(201).json({ success: true, message: "Dispositivo registrado para notificaciones." });
 });
 
 // Booking Endpoint
@@ -77,11 +121,11 @@ app.post('/api/booking', async (req, res) => {
     });
   }
 
-  // NOTIFICATION LOGIC WITH RESEND
+  // NOTIFICATION LOGIC
   try {
     const SENDER_EMAIL = 'CompaValdo System <notifications@compavaldo.com>';
 
-    // 1. Full detailed email body for Band Manager
+    // 1. Full detailed email body for Band Manager via Resend
     const managerEmailBody = 
       `Se ha recibido una nueva solicitud de contratacion:\n\n` +
       `Nombre del Cliente: ${name}\n` +
@@ -90,7 +134,7 @@ app.post('/api/booking', async (req, res) => {
       `Fecha del Evento: ${date}\n\n` +
       `Detalles del Evento:\n${details}`;
 
-    const emailPromises = [
+    const promises = [
       resend.emails.send({
         from: SENDER_EMAIL,
         to: process.env.MANAGER_EMAIL,
@@ -99,37 +143,40 @@ app.post('/api/booking', async (req, res) => {
       })
     ];
 
-    // 2. Short, clean string for Cricket Gateway (@sms.cricketwireless.net)
-    if (process.env.CRICKET_PHONE) {
-      // Ensure phone is strictly 10 digits without +1, dashes, or spaces
-      const cleanPhone = process.env.CRICKET_PHONE.replace(/\D/g, '').slice(-10);
-      
-      // Concise single-line text to bypass carrier email-to-SMS spam blocks
-      const smsText = `CompaValdo: Nueva reserva de ${name} para ${date}. Tel: ${phone}`;
+    // 2. Lock-Screen Web Push Notification to Admin Devices
+    if (pushSubscriptions.length > 0 && process.env.VAPID_PUBLIC_KEY) {
+      const pushPayload = JSON.stringify({
+        title: "🔔 Nueva Reserva CompaValdo",
+        body: `${name} ha solicitado fecha para ${date}. Tel: ${phone}`,
+        url: "/"
+      });
 
-      emailPromises.push(
-        resend.emails.send({
-          from: SENDER_EMAIL,
-          to: `${cleanPhone}@sms.cricketwireless.net`,
-          subject: 'Reserva',
-          text: smsText
-        })
-      );
+      pushSubscriptions.forEach(sub => {
+        promises.push(
+          webpush.sendNotification(sub, pushPayload).catch(err => {
+            console.error("Failed to send push notification to device:", err.endpoint, err.statusCode);
+            if (err.statusCode === 410 || err.statusCode === 404) {
+              // Remove expired subscriptions
+              pushSubscriptions = pushSubscriptions.filter(s => s.endpoint !== sub.endpoint);
+            }
+          })
+        );
+      });
     }
 
-    const results = await Promise.all(emailPromises);
+    const results = await Promise.all(promises);
     console.log(`Booking processed successfully for: ${name}`, results);
 
     return res.status(200).json({ 
       success: true, 
       message: "Booking received perfectly." 
     });
-  } catch (mailErr) {
-    console.error("Resend notification delivery failed:", mailErr.response?.data || mailErr.message || mailErr);
+  } catch (err) {
+    console.error("Notification delivery failed:", err.message || err);
     return res.status(500).json({
       success: false,
       message: "Server error sending notifications.",
-      errorDetails: mailErr.message
+      errorDetails: err.message
     });
   }
 });

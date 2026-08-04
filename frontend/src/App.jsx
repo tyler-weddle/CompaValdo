@@ -9,10 +9,14 @@ function App() {
   const [formData, setFormData] = useState({ name: '', phone: '', email: '', date: '', details: '' });
   const [optIn, setOptIn] = useState(false);
   const [status, setStatus] = useState('');
-  
-  // Track backend field-specific validation messages
   const [errors, setErrors] = useState({});
   const videoRef = useRef(null);
+
+  // Simple admin view toggle for /admin path
+  const isAdminPath = window.location.pathname === '/admin';
+  const [adminPass, setAdminPass] = useState('');
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+  const [adminStatus, setAdminStatus] = useState('');
 
   useEffect(() => {
     if (videoRef.current) {
@@ -29,24 +33,21 @@ function App() {
     { icon: <FaApple />, url: 'https://music.apple.com/us/artist/el-compa-valdo/1722832085', label: 'Apple Music' },
   ];
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setErrors({}); // Wipe out previous red warnings on new submit
-    setStatus('Enviando...');
-    
-    // 1. Grab raw environment variable or fallback to local Express server
+  const getBaseUrl = () => {
     let baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000').trim();
-    
-    // 2. Ensure standard protocol prefix
     if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
       baseUrl = `https://${baseUrl}`;
     }
-    
-    // 3. Strip any trailing slashes to prevent double-slash paths
-    baseUrl = baseUrl.replace(/\/+$/, '');
+    return baseUrl.replace(/\/+$/, '');
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setErrors({});
+    setStatus('Enviando...');
     
     try {
-      const response = await fetch(`${baseUrl}/api/booking`, {
+      const response = await fetch(`${getBaseUrl()}/api/booking`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...formData, smsOptIn: optIn }),
@@ -73,12 +74,103 @@ function App() {
     }
   };
 
+  const handleAdminLogin = async (e) => {
+    e.preventDefault();
+    setAdminStatus('Verificando...');
+
+    try {
+      const res = await fetch(`${getBaseUrl()}/api/admin/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: adminPass })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        setIsAdminLoggedIn(true);
+        setAdminStatus('Sesión iniciada.');
+      } else {
+        setAdminStatus('Contraseña incorrecta.');
+      }
+    } catch (err) {
+      setAdminStatus('Error de conexión.');
+    }
+  };
+
+  const handleEnablePush = async () => {
+    setAdminStatus('Solicitando permisos...');
+
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      alert('Tu navegador no soporta Notificaciones Push.');
+      return;
+    }
+
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') {
+      alert('Permiso denegado por el navegador.');
+      return;
+    }
+
+    try {
+      const register = await navigator.serviceWorker.register('/sw.js');
+      const subscription = await register.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: import.meta.env.VITE_VAPID_PUBLIC_KEY
+      });
+
+      await fetch(`${getBaseUrl()}/api/admin/subscribe`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subscription, password: adminPass })
+      });
+
+      setAdminStatus('¡Notificaciones activadas en este dispositivo!');
+    } catch (err) {
+      console.error('Error registrando Push:', err);
+      setAdminStatus('Error al activar notificaciones.');
+    }
+  };
+
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setErrors({});
     setStatus('');
   };
 
+  // Render Admin View if user navigates to /admin
+  if (isAdminPath) {
+    return (
+      <div style={{ padding: '40px', color: '#fff', backgroundColor: '#111', minHeight: '100vh', fontFamily: 'sans-serif' }}>
+        <h2>CompaValdo Admin - Notificaciones</h2>
+
+        {!isAdminLoggedIn ? (
+          <form onSubmit={handleAdminLogin} style={{ marginTop: '20px' }}>
+            <input 
+              type="password" 
+              placeholder="Contraseña Admin" 
+              value={adminPass} 
+              onChange={(e) => setAdminPass(e.target.value)}
+              style={{ padding: '10px', fontSize: '16px', borderRadius: '4px', border: '1px solid #444' }}
+            />
+            <button type="submit" style={{ marginLeft: '10px', padding: '10px 20px', fontSize: '16px', background: '#c59d5f', color: '#000', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+              Entrar
+            </button>
+          </form>
+        ) : (
+          <div style={{ marginTop: '20px' }}>
+            <p>✅ Sesión activa.</p>
+            <button onClick={handleEnablePush} style={{ padding: '12px 24px', fontSize: '16px', background: '#28a745', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+              Activar Notificaciones en este Teléfono
+            </button>
+          </div>
+        )}
+
+        {adminStatus && <p style={{ marginTop: '20px', color: '#c59d5f' }}>{adminStatus}</p>}
+      </div>
+    );
+  }
+
+  // Main Public Site
   return (
     <div className="site-wrapper">
       <video autoPlay loop muted playsInline preload="auto" className="hero-video" ref={videoRef}>
