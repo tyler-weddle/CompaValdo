@@ -375,3 +375,96 @@ h1, h2, h3, .form-card h2 {
     margin-top: 0;
   }
 }
+
+.admin-wrapper {
+  position: relative;
+  z-index: 100;
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background-color: var(--bg-primary);
+}
+
+.admin-card {
+  background: var(--bg-secondary);
+  border: 1px solid rgba(225, 207, 126, 0.2);
+  border-radius: 12px;
+  padding: 40px 30px;
+  width: 100%;
+  max-width: 480px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.admin-card h2 {
+  font-family: var(--sans);
+  font-size: 1.5rem;
+  color: var(--accent-gold);
+  margin-bottom: 24px;
+  letter-spacing: 1px;
+}
+
+.admin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.admin-input {
+  font-family: var(--sans);
+  width: 100%;
+  background: #0a0a0a;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 14px;
+  color: var(--text-white);
+  font-size: 1rem;
+}
+
+.admin-input:focus {
+  outline: none;
+  border-color: var(--accent-gold);
+}
+
+.admin-status-msg {
+  margin-top: 16px;
+  font-size: 0.9rem;
+  color: var(--accent-gold);
+}
+
+@media (min-width: 768px) {
+  .main-banner {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 100vw;
+    max-width: 100%;
+    padding: 0 50px;
+    height: 90px;
+  }
+
+  .brand-logo {
+    height: 70px;
+    max-height: 70px;
+    margin-bottom: 0;
+    transform: none;
+  }
+
+  .social-icon-link {
+    font-size: 1.5rem;
+  }
+
+  .legal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 50px;
+  }
+
+  .legal-links {
+    margin-top: 0;
+  }
+}

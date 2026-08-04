@@ -12,13 +12,18 @@ function App() {
   const [errors, setErrors] = useState({});
   const videoRef = useRef(null);
 
-  // Simple admin view toggle for /admin path
-  // const [adminPass, setAdminPass] = useState('');
-  const isAdminPath = window.location.pathname === '/admin' || window.location.hash === '#admin';
+  // Safe SPA admin route state
+  const [isAdminPath, setIsAdminPath] = useState(false);
+  const [adminPass, setAdminPass] = useState('');
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [adminStatus, setAdminStatus] = useState('');
 
   useEffect(() => {
+    // Check path or hash on mount safely
+    if (window.location.pathname === '/admin' || window.location.hash === '#admin') {
+      setIsAdminPath(true);
+    }
+
     if (videoRef.current) {
       videoRef.current.defaultMuted = true;
       videoRef.current.muted = true;
@@ -100,6 +105,13 @@ function App() {
   const handleEnablePush = async () => {
     setAdminStatus('Solicitando permisos...');
 
+    const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+    if (!vapidKey) {
+      alert('Error: VITE_VAPID_PUBLIC_KEY is not defined in environment variables.');
+      setAdminStatus('Error: VAPID Key missing.');
+      return;
+    }
+
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
       alert('Tu navegador no soporta Notificaciones Push.');
       return;
@@ -115,7 +127,7 @@ function App() {
       const register = await navigator.serviceWorker.register('/sw.js');
       const subscription = await register.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: import.meta.env.VITE_VAPID_PUBLIC_KEY
+        applicationServerKey: vapidKey
       });
 
       await fetch(`${getBaseUrl()}/api/admin/subscribe`, {
@@ -137,35 +149,37 @@ function App() {
     setStatus('');
   };
 
-  // Render Admin View if user navigates to /admin
+  // Dedicated Admin Panel View
   if (isAdminPath) {
     return (
-      <div style={{ padding: '40px', color: '#fff', backgroundColor: '#111', minHeight: '100vh', fontFamily: 'sans-serif' }}>
-        <h2>CompaValdo Admin - Notificaciones</h2>
+      <div className="admin-wrapper">
+        <div className="admin-card">
+          <h2>CompaValdo Admin</h2>
 
-        {!isAdminLoggedIn ? (
-          <form onSubmit={handleAdminLogin} style={{ marginTop: '20px' }}>
-            <input 
-              type="password" 
-              placeholder="Contraseña Admin" 
-              value={adminPass} 
-              onChange={(e) => setAdminPass(e.target.value)}
-              style={{ padding: '10px', fontSize: '16px', borderRadius: '4px', border: '1px solid #444' }}
-            />
-            <button type="submit" style={{ marginLeft: '10px', padding: '10px 20px', fontSize: '16px', background: '#c59d5f', color: '#000', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-              Entrar
-            </button>
-          </form>
-        ) : (
-          <div style={{ marginTop: '20px' }}>
-            <p>✅ Sesión activa.</p>
-            <button onClick={handleEnablePush} style={{ padding: '12px 24px', fontSize: '16px', background: '#28a745', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-              Activar Notificaciones en este Teléfono
-            </button>
-          </div>
-        )}
+          {!isAdminLoggedIn ? (
+            <form onSubmit={handleAdminLogin} className="admin-form">
+              <input 
+                type="password" 
+                placeholder="Contraseña Admin" 
+                value={adminPass} 
+                onChange={(e) => setAdminPass(e.target.value)}
+                className="admin-input"
+              />
+              <button type="submit" className="gold-button">
+                ENTRAR
+              </button>
+            </form>
+          ) : (
+            <div className="admin-form">
+              <p style={{ color: '#f5f5f5', marginBottom: '10px' }}>✅ Sesión activa.</p>
+              <button onClick={handleEnablePush} className="gold-button">
+                ACTIVAR NOTIFICACIONES
+              </button>
+            </div>
+          )}
 
-        {adminStatus && <p style={{ marginTop: '20px', color: '#c59d5f' }}>{adminStatus}</p>}
+          {adminStatus && <p className="admin-status-msg">{adminStatus}</p>}
+        </div>
       </div>
     );
   }

@@ -42,7 +42,7 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
   );
 }
 
-// In-memory store for admin push subscriptions (Persist in DB for long-term production)
+// In-memory store for registered devices
 let pushSubscriptions = [];
 
 // Health Check Endpoint
@@ -71,7 +71,6 @@ app.post('/api/admin/subscribe', (req, res) => {
     return res.status(400).json({ success: false, message: "Invalid subscription object." });
   }
 
-  // Avoid duplicate subscriptions
   const exists = pushSubscriptions.some(sub => sub.endpoint === subscription.endpoint);
   if (!exists) {
     pushSubscriptions.push(subscription);
@@ -125,7 +124,7 @@ app.post('/api/booking', async (req, res) => {
   try {
     const SENDER_EMAIL = 'CompaValdo System <notifications@compavaldo.com>';
 
-    // 1. Full detailed email body for Band Manager via Resend
+    // 1. Full detailed email for Manager via Resend
     const managerEmailBody = 
       `Se ha recibido una nueva solicitud de contratacion:\n\n` +
       `Nombre del Cliente: ${name}\n` +
@@ -156,7 +155,6 @@ app.post('/api/booking', async (req, res) => {
           webpush.sendNotification(sub, pushPayload).catch(err => {
             console.error("Failed to send push notification to device:", err.endpoint, err.statusCode);
             if (err.statusCode === 410 || err.statusCode === 404) {
-              // Remove expired subscriptions
               pushSubscriptions = pushSubscriptions.filter(s => s.endpoint !== sub.endpoint);
             }
           })
