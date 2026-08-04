@@ -13,8 +13,8 @@ function App() {
   const videoRef = useRef(null);
 
   // Simple admin view toggle for /admin path
-  const isAdminPath = window.location.pathname === '/admin';
-  const [adminPass, setAdminPass] = useState('');
+  // const [adminPass, setAdminPass] = useState('');
+  const isAdminPath = window.location.pathname === '/admin' || window.location.hash === '#admin';
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [adminStatus, setAdminStatus] = useState('');
 
