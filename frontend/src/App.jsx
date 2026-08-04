@@ -4,6 +4,22 @@ import {
 } from 'react-icons/fa';
 import './App.css';
 
+// Helper to convert base64 VAPID string into Uint8Array buffer for PushManager
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding)
+    .replace(/-/g, '+')
+    .replace(/_/g, '/');
+
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({ name: '', phone: '', email: '', date: '', details: '' });
@@ -105,10 +121,10 @@ function App() {
   const handleEnablePush = async () => {
     setAdminStatus('Solicitando permisos...');
 
-    const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
-    if (!vapidKey) {
-      alert('Error: VITE_VAPID_PUBLIC_KEY is not defined in environment variables.');
-      setAdminStatus('Error: VAPID Key missing.');
+    const rawVapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+    if (!rawVapidKey) {
+      alert('Error: VITE_VAPID_PUBLIC_KEY no está configurada en Vercel.');
+      setAdminStatus('Error: VAPID Key no configurada.');
       return;
     }
 
@@ -117,29 +133,43 @@ function App() {
       return;
     }
 
-    const permission = await Notification.requestPermission();
-    if (permission !== 'granted') {
-      alert('Permiso denegado por el navegador.');
-      return;
-    }
-
     try {
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        setAdminStatus('Permiso denegado por el usuario.');
+        return;
+      }
+
+      setAdminStatus('Registrando Service Worker...');
       const register = await navigator.serviceWorker.register('/sw.js');
+
+      // Convert VAPID key string to Uint8Array buffer
+      const convertedVapidKey = urlBase64ToUint8Array(rawVapidKey);
+
+      setAdminStatus('Suscrito a PushManager...');
       const subscription = await register.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: vapidKey
+        applicationServerKey: convertedVapidKey
       });
 
-      await fetch(`${getBaseUrl()}/api/admin/subscribe`, {
+      setAdminStatus('Guardando en el servidor...');
+      const response = await fetch(`${getBaseUrl()}/api/admin/subscribe`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ subscription, password: adminPass })
       });
 
-      setAdminStatus('¡Notificaciones activadas en este dispositivo!');
+      const resData = await response.json();
+
+      if (resData.success) {
+        setAdminStatus('¡Notificaciones activadas con éxito!');
+      } else {
+        setAdminStatus(`Error del servidor: ${resData.message}`);
+      }
     } catch (err) {
       console.error('Error registrando Push:', err);
-      setAdminStatus('Error al activar notificaciones.');
+      // Display the exact error details on screen
+      setAdminStatus(`Error: ${err.name} - ${err.message}`);
     }
   };
 
