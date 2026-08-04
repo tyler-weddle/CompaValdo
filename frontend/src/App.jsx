@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { 
-  FaInstagram, FaYoutube, FaSpotify, FaApple, FaPlay, FaPause 
+  FaInstagram, FaYoutube, FaSpotify, FaApple, FaPlay, FaPause, FaMusic, FaTimes 
 } from 'react-icons/fa';
 import './App.css';
 
@@ -35,20 +35,20 @@ function App() {
   const [adminStatus, setAdminStatus] = useState('');
 
   // Audio Showcase Player state
+  const [isMusicOpen, setIsMusicOpen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const audioRef = useRef(null);
 
-  // Configure your featured song track here!
+  // Featured song details
   const songData = {
     title: "Estilo CompaValdo",
     artist: "El Compa Valdo",
-    src: "/song.mp3" // Ensure this file exists in your public/ folder (e.g., frontend/public/song.mp3)
+    src: "/song.mp3" // Place your mp3 in frontend/public/
   };
 
   useEffect(() => {
-    // Check path or hash on mount safely
     if (window.location.pathname === '/admin' || window.location.hash === '#admin') {
       setIsAdminPath(true);
     }
@@ -189,7 +189,6 @@ function App() {
       setAdminStatus('Registrando Service Worker...');
       const register = await navigator.serviceWorker.register('/sw.js');
 
-      // Convert VAPID key string to Uint8Array buffer
       const convertedVapidKey = urlBase64ToUint8Array(rawVapidKey);
 
       setAdminStatus('Suscrito a PushManager...');
@@ -214,7 +213,6 @@ function App() {
       }
     } catch (err) {
       console.error('Error registrando Push:', err);
-      // Display the exact error details on screen
       setAdminStatus(`Error: ${err.name} - ${err.message}`);
     }
   };
@@ -279,59 +277,71 @@ function App() {
         </nav>
       </header>
 
-      {/* 🎵 MUSIC SHOWCASE WIDGET UNDERNEATH MAIN BANNER */}
-      <div className="music-widget-wrapper">
-        <div className="music-card">
-          <audio 
-            ref={audioRef} 
-            src={songData.src} 
-            onTimeUpdate={handleTimeUpdate} 
-            onEnded={() => setIsPlaying(false)}
-          />
-          
-          <div className="music-card-header">
-            <div className="music-title-info">
-              <p className="song-title">{songData.title}</p>
-              <p className="artist-name">{songData.artist}</p>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div className={`eq-bars ${isPlaying ? 'playing' : ''}`}>
-                <div className="eq-bar"></div>
-                <div className="eq-bar"></div>
-                <div className="eq-bar"></div>
-              </div>
-              <span className="music-tag">Estreno</span>
-            </div>
-          </div>
-
-          <div className="player-controls-row">
-            <button className="play-pause-btn" onClick={togglePlay} aria-label="Play / Pause">
-              {isPlaying ? <FaPause /> : <FaPlay style={{ marginLeft: '3px' }} />}
-            </button>
-
-            <div className="scrubber-container">
-              <input 
-                type="range" 
-                min="0" 
-                max={duration || 100} 
-                value={currentTime} 
-                onChange={handleSeek} 
-                className="scrubber-slider" 
-              />
-              <div className="time-display">
-                <span>{formatTime(currentTime)}</span>
-                <span>{formatTime(duration)}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <main className="content-container">
         <div className="hero-cta-box">
+          
+          {/* CENTERED NEW MUSIC TRIGGER BUTTON */}
+          <button 
+            className={`music-center-btn ${isPlaying ? 'pulse' : ''}`}
+            onClick={() => setIsMusicOpen(!isMusicOpen)}
+          >
+            {isMusicOpen ? <FaTimes /> : <FaMusic />}
+            <span>{isMusicOpen ? 'OCULTAR MÚSICA' : 'NUEVA MÚSICA'}</span>
+          </button>
+
+          {/* EXPANDABLE CENTER MUSIC WIDGET */}
+          {isMusicOpen && (
+            <div className="center-music-card">
+              <audio 
+                ref={audioRef} 
+                src={songData.src} 
+                onTimeUpdate={handleTimeUpdate} 
+                onEnded={() => setIsPlaying(false)}
+              />
+              
+              <div className="music-card-header">
+                <div className="music-title-info">
+                  <p className="song-title">{songData.title}</p>
+                  <p className="artist-name">{songData.artist}</p>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div className={`eq-bars ${isPlaying ? 'playing' : ''}`}>
+                    <div className="eq-bar"></div>
+                    <div className="eq-bar"></div>
+                    <div className="eq-bar"></div>
+                  </div>
+                  <span className="music-tag">Estreno</span>
+                </div>
+              </div>
+
+              <div className="player-controls-row">
+                <button className="play-pause-btn" onClick={togglePlay} aria-label="Play / Pause">
+                  {isPlaying ? <FaPause /> : <FaPlay style={{ marginLeft: '2px' }} />}
+                </button>
+
+                <div className="scrubber-container">
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max={duration || 100} 
+                    value={currentTime} 
+                    onChange={handleSeek} 
+                    className="scrubber-slider" 
+                  />
+                  <div className="time-display">
+                    <span>{formatTime(currentTime)}</span>
+                    <span>{formatTime(duration)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* MAIN BOOKING CTA */}
           <button className="gold-button trigger-btn" onClick={() => setIsModalOpen(true)}>
             RESERVAR FECHA
           </button>
+
         </div>
       </main>
 
