@@ -285,7 +285,7 @@ function App() {
             className={`music-center-btn ${isPlaying ? 'pulse' : ''}`}
             onClick={() => setIsMusicOpen(!isMusicOpen)}
           >
-            {isMusicOpen ? <FaTimes /> : <FaMusic />}
+            {isMusicOpen && <FaTimes />}
             <span>{isMusicOpen ? 'OCULTAR MÚSICA' : 'NUEVA MÚSICA'}</span>
           </button>
 
