@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { 
-  FaInstagram, FaYoutube, FaSpotify, FaApple 
+  FaInstagram, FaYoutube, FaSpotify, FaApple, FaPlay, FaPause 
 } from 'react-icons/fa';
 import './App.css';
 
@@ -34,6 +34,19 @@ function App() {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [adminStatus, setAdminStatus] = useState('');
 
+  // Audio Showcase Player state
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const audioRef = useRef(null);
+
+  // Configure your featured song track here!
+  const songData = {
+    title: "Estilo CompaValdo",
+    artist: "El Compa Valdo",
+    src: "/song.mp3" // Ensure this file exists in your public/ folder (e.g., frontend/public/song.mp3)
+  };
+
   useEffect(() => {
     // Check path or hash on mount safely
     if (window.location.pathname === '/admin' || window.location.hash === '#admin') {
@@ -60,6 +73,39 @@ function App() {
       baseUrl = `https://${baseUrl}`;
     }
     return baseUrl.replace(/\/+$/, '');
+  };
+
+  // Audio Player Handlers
+  const togglePlay = () => {
+    if (!audioRef.current) return;
+    if (isPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play().catch(err => console.log("Audio playback error:", err));
+    }
+    setIsPlaying(!isPlaying);
+  };
+
+  const handleTimeUpdate = () => {
+    if (audioRef.current) {
+      setCurrentTime(audioRef.current.currentTime);
+      setDuration(audioRef.current.duration || 0);
+    }
+  };
+
+  const handleSeek = (e) => {
+    const newTime = parseFloat(e.target.value);
+    if (audioRef.current) {
+      audioRef.current.currentTime = newTime;
+      setCurrentTime(newTime);
+    }
+  };
+
+  const formatTime = (secs) => {
+    if (isNaN(secs) || secs === 0) return "0:00";
+    const mins = Math.floor(secs / 60);
+    const remainingSecs = Math.floor(secs % 60);
+    return `${mins}:${remainingSecs < 10 ? '0' : ''}${remainingSecs}`;
   };
 
   const handleSubmit = async (e) => {
@@ -232,6 +278,54 @@ function App() {
           ))}
         </nav>
       </header>
+
+      {/* 🎵 MUSIC SHOWCASE WIDGET UNDERNEATH MAIN BANNER */}
+      <div className="music-widget-wrapper">
+        <div className="music-card">
+          <audio 
+            ref={audioRef} 
+            src={songData.src} 
+            onTimeUpdate={handleTimeUpdate} 
+            onEnded={() => setIsPlaying(false)}
+          />
+          
+          <div className="music-card-header">
+            <div className="music-title-info">
+              <p className="song-title">{songData.title}</p>
+              <p className="artist-name">{songData.artist}</p>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div className={`eq-bars ${isPlaying ? 'playing' : ''}`}>
+                <div className="eq-bar"></div>
+                <div className="eq-bar"></div>
+                <div className="eq-bar"></div>
+              </div>
+              <span className="music-tag">Estreno</span>
+            </div>
+          </div>
+
+          <div className="player-controls-row">
+            <button className="play-pause-btn" onClick={togglePlay} aria-label="Play / Pause">
+              {isPlaying ? <FaPause /> : <FaPlay style={{ marginLeft: '3px' }} />}
+            </button>
+
+            <div className="scrubber-container">
+              <input 
+                type="range" 
+                min="0" 
+                max={duration || 100} 
+                value={currentTime} 
+                onChange={handleSeek} 
+                className="scrubber-slider" 
+              />
+              <div className="time-display">
+                <span>{formatTime(currentTime)}</span>
+                <span>{formatTime(duration)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <main className="content-container">
         <div className="hero-cta-box">
