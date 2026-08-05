@@ -4,6 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const { Resend } = require('resend');
 const webpush = require('web-push');
+const mysql = require('mysql2/promise');
 
 const app = express();
 
@@ -42,12 +43,42 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
   );
 }
 
-// In-memory store for registered devices
-let pushSubscriptions = [];
+// 3. Initialize MariaDB Connection Pool
+const db = mysql.createPool(
+  process.env.DATABASE_URL || {
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_NAME || 'compavaldo',
+    port: process.env.DB_PORT || 3306,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+  }
+);
+
+// Auto-create push_subscriptions table on startup if it doesn't exist
+async function initDb() {
+  try {
+    const createTableQuery = `
+      CREATE TABLE IF NOT EXISTS push_subscriptions (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        endpoint VARCHAR(512) UNIQUE NOT NULL,
+        subscription_json TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `;
+    await db.query(createTableQuery);
+    console.log('✅ MariaDB connected: push_subscriptions table ready.');
+  } catch (err) {
+    console.error('❌ MariaDB initialization failed:', err.message);
+  }
+}
+initDb();
 
 // Health Check Endpoint
 app.get('/', (req, res) => {
-  res.status(200).send('CompaValdo Backend API is Live');
+  res.status(200).send('CompaValdo Backend API is Live with MariaDB');
 });
 
 // Admin Login Endpoint
@@ -59,8 +90,8 @@ app.post('/api/admin/login', (req, res) => {
   return res.status(401).json({ success: false, message: "Contraseña incorrecta." });
 });
 
-// Register Admin Device for Web Push
-app.post('/api/admin/subscribe', (req, res) => {
+// Register Admin Device for Web Push (Persistent in MariaDB)
+app.post('/api/admin/subscribe', async (req, res) => {
   const { subscription, password } = req.body;
 
   if (password !== process.env.ADMIN_PASSWORD) {
@@ -71,13 +102,24 @@ app.post('/api/admin/subscribe', (req, res) => {
     return res.status(400).json({ success: false, message: "Invalid subscription object." });
   }
 
-  const exists = pushSubscriptions.some(sub => sub.endpoint === subscription.endpoint);
-  if (!exists) {
-    pushSubscriptions.push(subscription);
-  }
+  try {
+    const endpoint = subscription.endpoint;
+    const jsonString = JSON.stringify(subscription);
 
-  console.log(`New push subscription registered. Total devices: ${pushSubscriptions.length}`);
-  return res.status(201).json({ success: true, message: "Dispositivo registrado para notificaciones." });
+    // Save subscription in MariaDB or update if endpoint already exists
+    const query = `
+      INSERT INTO push_subscriptions (endpoint, subscription_json)
+      VALUES (?, ?)
+      ON DUPLICATE KEY UPDATE subscription_json = VALUES(subscription_json);
+    `;
+    await db.execute(query, [endpoint, jsonString]);
+
+    console.log('📱 Push subscription saved permanently in MariaDB.');
+    return res.status(201).json({ success: true, message: "Dispositivo registrado en MariaDB." });
+  } catch (err) {
+    console.error('Database save error:', err);
+    return res.status(500).json({ success: false, message: "Error al guardar suscripción en MariaDB." });
+  }
 });
 
 // Booking Endpoint
@@ -142,24 +184,30 @@ app.post('/api/booking', async (req, res) => {
       })
     ];
 
-    // 2. Lock-Screen Web Push Notification to Admin Devices
-    if (pushSubscriptions.length > 0 && process.env.VAPID_PUBLIC_KEY) {
-      const pushPayload = JSON.stringify({
-        title: "🔔 Nueva Reserva CompaValdo",
-        body: `${name} ha solicitado fecha para ${date}. Tel: ${phone}`,
-        url: "/"
-      });
+    // 2. Lock-Screen Web Push Notifications via MariaDB Subscriptions
+    if (process.env.VAPID_PUBLIC_KEY) {
+      const [rows] = await db.query('SELECT endpoint, subscription_json FROM push_subscriptions');
 
-      pushSubscriptions.forEach(sub => {
-        promises.push(
-          webpush.sendNotification(sub, pushPayload).catch(err => {
-            console.error("Failed to send push notification to device:", err.endpoint, err.statusCode);
-            if (err.statusCode === 410 || err.statusCode === 404) {
-              pushSubscriptions = pushSubscriptions.filter(s => s.endpoint !== sub.endpoint);
-            }
-          })
-        );
-      });
+      if (rows.length > 0) {
+        const pushPayload = JSON.stringify({
+          title: "Nueva Reserva CompaValdo",
+          body: `${name} ha solicitado fecha para ${date}. Tel: ${phone}`,
+          url: "/"
+        });
+
+        rows.forEach(row => {
+          const subscription = JSON.parse(row.subscription_json);
+          promises.push(
+            webpush.sendNotification(subscription, pushPayload).catch(async (err) => {
+              console.error("Failed to send push notification to device:", row.endpoint, err.statusCode);
+              // Clean up expired or unsubscribed tokens (404 / 410) automatically from MariaDB
+              if (err.statusCode === 410 || err.statusCode === 404) {
+                await db.execute('DELETE FROM push_subscriptions WHERE endpoint = ?', [row.endpoint]);
+              }
+            })
+          );
+        });
+      }
     }
 
     const results = await Promise.all(promises);
