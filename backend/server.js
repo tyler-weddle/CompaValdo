@@ -43,21 +43,28 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
   );
 }
 
-// 3. Initialize MariaDB Connection Pool
-const db = mysql.createPool(
-  process.env.DATABASE_URL || {
+// 3. Safe MariaDB Connection Pool Initialization
+const getDbConfig = () => {
+  const url = process.env.DATABASE_URL;
+  if (url && !url.includes('USERNAME:PASSWORD')) {
+    return url;
+  }
+  
+  return {
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
     database: process.env.DB_NAME || 'compavaldo',
-    port: process.env.DB_PORT || 3306,
+    port: Number(process.env.DB_PORT) || 3306,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
-  }
-);
+  };
+};
 
-// Auto-create push_subscriptions table on startup if it doesn't exist
+const db = mysql.createPool(getDbConfig());
+
+// Auto-create push_subscriptions table on startup
 async function initDb() {
   try {
     const createTableQuery = `
@@ -106,7 +113,6 @@ app.post('/api/admin/subscribe', async (req, res) => {
     const endpoint = subscription.endpoint;
     const jsonString = JSON.stringify(subscription);
 
-    // Save subscription in MariaDB or update if endpoint already exists
     const query = `
       INSERT INTO push_subscriptions (endpoint, subscription_json)
       VALUES (?, ?)
@@ -124,7 +130,7 @@ app.post('/api/admin/subscribe', async (req, res) => {
 
 // Booking Endpoint
 app.post('/api/booking', async (req, res) => {
-  const { name, phone, email, date, details, smsOptIn } = req.body;
+  const { name, phone, email, date, hours, details, smsOptIn } = req.body;
   const errors = {}; 
 
   // SERVER-SIDE VALIDATION
@@ -144,6 +150,10 @@ app.post('/api/booking', async (req, res) => {
 
   if (!date || isNaN(Date.parse(date))) {
     errors.date = "Fecha inválida.";
+  }
+
+  if (!hours || isNaN(hours) || Number(hours) <= 0) {
+    errors.hours = "Especifique las horas del evento.";
   }
 
   if (!details || details.trim().length === 0) {
@@ -166,13 +176,14 @@ app.post('/api/booking', async (req, res) => {
   try {
     const SENDER_EMAIL = 'CompaValdo System <notifications@compavaldo.com>';
 
-    // 1. Full detailed email for Manager via Resend
+    // 1. Detailed email for Manager via Resend
     const managerEmailBody = 
       `Se ha recibido una nueva solicitud de contratacion:\n\n` +
       `Nombre del Cliente: ${name}\n` +
       `Telefono: ${phone}\n` +
       `Correo de Contacto: ${email}\n` +
-      `Fecha del Evento: ${date}\n\n` +
+      `Fecha del Evento: ${date}\n` +
+      `Duracion: ${hours} hora(s)\n\n` +
       `Detalles del Evento:\n${details}`;
 
     const promises = [
@@ -191,7 +202,7 @@ app.post('/api/booking', async (req, res) => {
       if (rows.length > 0) {
         const pushPayload = JSON.stringify({
           title: "Nueva Reserva CompaValdo",
-          body: `${name} ha solicitado fecha para ${date}. Tel: ${phone}`,
+          body: `${name} - ${date} (${hours} hrs). Tel: ${phone}`,
           url: "/"
         });
 
@@ -200,7 +211,6 @@ app.post('/api/booking', async (req, res) => {
           promises.push(
             webpush.sendNotification(subscription, pushPayload).catch(async (err) => {
               console.error("Failed to send push notification to device:", row.endpoint, err.statusCode);
-              // Clean up expired or unsubscribed tokens (404 / 410) automatically from MariaDB
               if (err.statusCode === 410 || err.statusCode === 404) {
                 await db.execute('DELETE FROM push_subscriptions WHERE endpoint = ?', [row.endpoint]);
               }

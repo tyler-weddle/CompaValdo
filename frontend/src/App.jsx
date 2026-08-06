@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { 
-  FaInstagram, FaYoutube, FaSpotify, FaApple, FaPlay, FaPause, FaMusic, FaTimes 
+  FaInstagram, FaYoutube, FaSpotify, FaApple, FaPlay, FaPause, FaTimes 
 } from 'react-icons/fa';
 import './App.css';
 
@@ -22,7 +22,7 @@ function urlBase64ToUint8Array(base64String) {
 
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({ name: '', phone: '', email: '', date: '', details: '' });
+  const [formData, setFormData] = useState({ name: '', phone: '', email: '', date: '', hours: '', details: '' });
   const [optIn, setOptIn] = useState(false);
   const [status, setStatus] = useState('');
   const [errors, setErrors] = useState({});
@@ -45,7 +45,7 @@ function App() {
   const songData = {
     title: "Estilo CompaValdo",
     artist: "El Compa Valdo",
-    src: "/song.mp3" // Place your mp3 in frontend/public/
+    src: "/song.mp3"
   };
 
   useEffect(() => {
@@ -124,7 +124,7 @@ function App() {
       
       if (data.success) {
         setStatus('¡Reserva enviada!');
-        setFormData({ name: '', phone: '', email: '', date: '', details: '' });
+        setFormData({ name: '', phone: '', email: '', date: '', hours: '', details: '' });
         setOptIn(false);
         setTimeout(() => { setIsModalOpen(false); setStatus(''); }, 2000);
       } else {
@@ -371,6 +371,18 @@ function App() {
               <div className="form-group">
                 {errors.date && <p className="field-error-msg">{errors.date}</p>}
                 <input type="date" value={formData.date} onChange={(e) => setFormData({...formData, date: e.target.value})} />
+              </div>
+
+              <div className="form-group">
+                {errors.hours && <p className="field-error-msg">{errors.hours}</p>}
+                <input 
+                  type="number" 
+                  min="1" 
+                  max="24" 
+                  placeholder="Duración del evento (Horas)" 
+                  value={formData.hours} 
+                  onChange={(e) => setFormData({...formData, hours: e.target.value})} 
+                />
               </div>
 
               <div className="form-group">
