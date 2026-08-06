@@ -23,6 +23,11 @@ function urlBase64ToUint8Array(base64String) {
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  
+  // Legal Modals State
+  const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+
   const [formData, setFormData] = useState({ name: '', phone: '', email: '', date: '', hours: '', details: '' });
   const [optIn, setOptIn] = useState(false);
   const [status, setStatus] = useState('');
@@ -42,7 +47,7 @@ function App() {
   const [duration, setDuration] = useState(0);
   const audioRef = useRef(null);
 
-  // Featured song details (.m4a file target)
+  // Featured song details
   const songData = {
     title: "Estilo CompaValdo",
     artist: "El Compa Valdo",
@@ -425,6 +430,7 @@ function App() {
                 <textarea placeholder="Detalles..." value={formData.details} onChange={(e) => setFormData({...formData, details: e.target.value})} />
               </div>
 
+              {/* COMPLIANCE CHECKBOX WITH WORKING LEGAL LINKS */}
               <div className="checkbox-group">
                 {errors.smsOptIn && <p className="field-error-msg">{errors.smsOptIn}</p>}
                 <label className="compliance-checkbox">
@@ -433,7 +439,9 @@ function App() {
                     checked={optIn} 
                     onChange={(e) => setOptIn(e.target.checked)} 
                   />
-                  <span>Acepto los términos de privacidad.</span>
+                  <span>
+                    Acepto los <button type="button" className="legal-link-btn" onClick={() => setIsTermsModalOpen(true)}>Términos</button> y la <button type="button" className="legal-link-btn" onClick={() => setIsPrivacyModalOpen(true)}>Política de Privacidad</button>.
+                  </span>
                 </label>
               </div>
 
@@ -444,7 +452,7 @@ function App() {
         </div>
       )}
 
-      {/* DEDICATED SUCCESS MODAL (NO CHECKMARK) */}
+      {/* DEDICATED SUCCESS MODAL */}
       {isSuccessModalOpen && (
         <div className="modal-backdrop" onClick={() => setIsSuccessModalOpen(false)}>
           <div className="form-card success-card" onClick={(e) => e.stopPropagation()}>
@@ -462,10 +470,56 @@ function App() {
         </div>
       )}
 
+      {/* PRIVACY POLICY MODAL */}
+      {isPrivacyModalOpen && (
+        <div className="modal-backdrop" onClick={() => setIsPrivacyModalOpen(false)}>
+          <div className="form-card legal-card" onClick={(e) => e.stopPropagation()}>
+            <button className="close-modal-btn" onClick={() => setIsPrivacyModalOpen(false)}>×</button>
+            <h2>POLÍTICA DE PRIVACIDAD</h2>
+            <div className="legal-text-content">
+              <p>En <strong>CompaValdo</strong>, valoramos su privacidad. Esta política explica cómo recopilamos y protegemos su información:</p>
+              <br />
+              <p><strong>1. Información recopilada:</strong> Recopilamos datos personales como nombre, teléfono, correo electrónico, fecha y detalles de eventos únicamente cuando usted los envía voluntariamente mediante nuestro formulario de contratación.</p>
+              <br />
+              <p><strong>2. Uso de los datos:</strong> La información recibida se utiliza exclusivamente para responder a sus solicitudes de reserva, coordinar eventos y comunicarnos con usted directamente.</p>
+              <br />
+              <p><strong>3. Protección de datos:</strong> No vendemos, alquilamos ni compartimos su información personal con terceros. Sus datos se almacenan en servidores seguros con cifrado de nivel profesional.</p>
+            </div>
+            <button className="gold-button" onClick={() => setIsPrivacyModalOpen(false)}>
+              ENTENDIDO
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* TERMS & CONDITIONS MODAL */}
+      {isTermsModalOpen && (
+        <div className="modal-backdrop" onClick={() => setIsTermsModalOpen(false)}>
+          <div className="form-card legal-card" onClick={(e) => e.stopPropagation()}>
+            <button className="close-modal-btn" onClick={() => setIsTermsModalOpen(false)}>×</button>
+            <h2>TÉRMINOS Y CONDICIONES</h2>
+            <div className="legal-text-content">
+              <p>Al utilizar este sitio web y enviar una solicitud de contratación, usted acepta los siguientes términos:</p>
+              <br />
+              <p><strong>1. Solicitudes de reserva:</strong> El envío del formulario constituye una solicitud de disponibilidad y cotización. La fecha no queda confirmada hasta la firma del contrato formal y pago del anticipo correspondiente.</p>
+              <br />
+              <p><strong>2. Propiedad Intelectual:</strong> Todo el contenido de este sitio (música, videos, logotipos e imágenes) es propiedad exclusiva de El Compa Valdo y está protegido por derechos de autor.</p>
+              <br />
+              <p><strong>3. Modificaciones:</strong> Nos reservamos el derecho de modificar estos términos en cualquier momento. El uso continuado del sitio implica la aceptación de los términos vigentes.</p>
+            </div>
+            <button className="gold-button" onClick={() => setIsTermsModalOpen(false)}>
+              ENTENDIDO
+            </button>
+          </div>
+        </div>
+      )}
+
       <footer className="legal-footer">
         <p>© {new Date().getFullYear()} CompaValdo.</p>
         <div className="legal-links">
-          <a href="/privacy">Privacidad</a> | <a href="/terms">Términos</a>
+          <button type="button" className="legal-footer-btn" onClick={() => setIsPrivacyModalOpen(true)}>Privacidad</button> 
+          <span>|</span> 
+          <button type="button" className="legal-footer-btn" onClick={() => setIsTermsModalOpen(true)}>Términos</button>
         </div>
       </footer>
     </div>
