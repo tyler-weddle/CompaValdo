@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { 
-  FaInstagram, FaYoutube, FaSpotify, FaApple, FaPlay, FaPause, FaTimes 
+  FaInstagram, FaYoutube, FaSpotify, FaApple, FaPlay, FaPause, FaTimes, FaCheckCircle 
 } from 'react-icons/fa';
 import './App.css';
 
@@ -22,6 +22,7 @@ function urlBase64ToUint8Array(base64String) {
 
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [formData, setFormData] = useState({ name: '', phone: '', email: '', date: '', hours: '', details: '' });
   const [optIn, setOptIn] = useState(false);
   const [status, setStatus] = useState('');
@@ -123,16 +124,17 @@ function App() {
       const data = await response.json();
       
       if (data.success) {
-        setStatus('¡Reserva enviada!');
+        setStatus('');
         setFormData({ name: '', phone: '', email: '', date: '', hours: '', details: '' });
         setOptIn(false);
-        setTimeout(() => { setIsModalOpen(false); setStatus(''); }, 2000);
+        setIsModalOpen(false);
+        setIsSuccessModalOpen(true);
       } else {
         setStatus('');
         if (data.errors) {
           setErrors(data.errors); 
         } else {
-          setStatus('Error.');
+          setStatus('Error al procesar la solicitud.');
         }
       }
     } catch (err) { 
@@ -345,6 +347,7 @@ function App() {
         </div>
       </main>
 
+      {/* BOOKING MODAL */}
       {isModalOpen && (
         <div className="modal-backdrop" onClick={handleCloseModal}>
           <div className="form-card" onClick={(e) => e.stopPropagation()}>
@@ -368,7 +371,6 @@ function App() {
                 <input type="email" placeholder="Correo" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
               </div>
 
-              {/* BOUNDED DATE FIELD WITH EXPLICIT LABEL */}
               <div className="form-group">
                 {errors.date && <p className="field-error-msg">{errors.date}</p>}
                 <div className="date-input-wrapper">
@@ -381,7 +383,6 @@ function App() {
                 </div>
               </div>
 
-              {/* HOURS FIELD (NO ARROW WHEELS, NUMERIC KEYPAD ON MOBILE) */}
               <div className="form-group">
                 {errors.hours && <p className="field-error-msg">{errors.hours}</p>}
                 <input 
@@ -401,7 +402,6 @@ function App() {
                 <textarea placeholder="Detalles..." value={formData.details} onChange={(e) => setFormData({...formData, details: e.target.value})} />
               </div>
 
-              {/* CHECKBOX CONTAINER */}
               <div className="checkbox-group">
                 {errors.smsOptIn && <p className="field-error-msg">{errors.smsOptIn}</p>}
                 <label className="compliance-checkbox">
@@ -417,6 +417,25 @@ function App() {
               <button type="submit" className="gold-button">ENVIAR</button>
             </form>
             {status && <p className="status-banner">{status}</p>}
+          </div>
+        </div>
+      )}
+
+      {/* DEDICATED SUCCESS MODAL */}
+      {isSuccessModalOpen && (
+        <div className="modal-backdrop" onClick={() => setIsSuccessModalOpen(false)}>
+          <div className="form-card success-card" onClick={(e) => e.stopPropagation()}>
+            <button className="close-modal-btn" onClick={() => setIsSuccessModalOpen(false)}>×</button>
+            
+            <FaCheckCircle className="success-icon" />
+            <h2>SOLICITUD ENVIADA</h2>
+            <p className="success-message">
+              ¡Gracias por ponerte en contacto! Hemos recibido los detalles de tu evento y te responderemos lo antes posible.
+            </p>
+
+            <button className="gold-button" onClick={() => setIsSuccessModalOpen(false)}>
+              CERRAR
+            </button>
           </div>
         </div>
       )}
