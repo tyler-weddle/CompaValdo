@@ -368,15 +368,26 @@ function App() {
                 <input type="email" placeholder="Correo" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
               </div>
 
+              {/* BOUNDED DATE FIELD WITH EXPLICIT LABEL */}
               <div className="form-group">
                 {errors.date && <p className="field-error-msg">{errors.date}</p>}
-                <input type="date" value={formData.date} onChange={(e) => setFormData({...formData, date: e.target.value})} />
+                <div className="date-input-wrapper">
+                  <span className="input-label">Fecha del evento</span>
+                  <input 
+                    type="date" 
+                    value={formData.date} 
+                    onChange={(e) => setFormData({...formData, date: e.target.value})} 
+                  />
+                </div>
               </div>
 
+              {/* HOURS FIELD (NO ARROW WHEELS, NUMERIC KEYPAD ON MOBILE) */}
               <div className="form-group">
                 {errors.hours && <p className="field-error-msg">{errors.hours}</p>}
                 <input 
                   type="number" 
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   min="1" 
                   max="24" 
                   placeholder="Duración del evento (Horas)" 
