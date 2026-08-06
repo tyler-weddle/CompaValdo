@@ -407,25 +407,19 @@ h1, h2, h3, .form-card h2 {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Dedicated Success Modal Styles */
+/* Dedicated Success Modal Styles (No Checkmark) */
 .success-card {
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 40px 24px;
-}
-
-.success-icon {
-  font-size: 3.5rem;
-  color: var(--accent-gold);
-  margin-bottom: 16px;
-  animation: successIconPop 0.3s ease-out;
+  padding: 36px 24px 28px 24px;
 }
 
 .success-card h2 {
   font-size: 1.5rem;
-  color: var(--text-white);
+  color: var(--accent-gold);
+  margin-top: 8px;
   margin-bottom: 12px;
 }
 
@@ -434,11 +428,6 @@ h1, h2, h3, .form-card h2 {
   color: var(--text-muted);
   line-height: 1.5;
   margin-bottom: 24px;
-}
-
-@keyframes successIconPop {
-  0% { transform: scale(0.5); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
 }
 
 .legal-footer {

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { 
-  FaInstagram, FaYoutube, FaSpotify, FaApple, FaPlay, FaPause, FaTimes, FaCheckCircle 
+  FaInstagram, FaYoutube, FaSpotify, FaApple, FaPlay, FaPause, FaTimes 
 } from 'react-icons/fa';
 import './App.css';
 
@@ -421,13 +421,12 @@ function App() {
         </div>
       )}
 
-      {/* DEDICATED SUCCESS MODAL */}
+      {/* DEDICATED SUCCESS MODAL (NO CHECKMARK) */}
       {isSuccessModalOpen && (
         <div className="modal-backdrop" onClick={() => setIsSuccessModalOpen(false)}>
           <div className="form-card success-card" onClick={(e) => e.stopPropagation()}>
             <button className="close-modal-btn" onClick={() => setIsSuccessModalOpen(false)}>×</button>
             
-            <FaCheckCircle className="success-icon" />
             <h2>SOLICITUD ENVIADA</h2>
             <p className="success-message">
               ¡Gracias por ponerte en contacto! Hemos recibido los detalles de tu evento y te responderemos lo antes posible.
