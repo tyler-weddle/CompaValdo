@@ -401,10 +401,15 @@ function App() {
                 <textarea placeholder="Detalles..." value={formData.details} onChange={(e) => setFormData({...formData, details: e.target.value})} />
               </div>
 
-              <div className="form-group">
+              {/* CHECKBOX CONTAINER */}
+              <div className="checkbox-group">
                 {errors.smsOptIn && <p className="field-error-msg">{errors.smsOptIn}</p>}
                 <label className="compliance-checkbox">
-                  <input type="checkbox" checked={optIn} onChange={(e) => setOptIn(e.target.checked)} />
+                  <input 
+                    type="checkbox" 
+                    checked={optIn} 
+                    onChange={(e) => setOptIn(e.target.checked)} 
+                  />
                   <span>Acepto los términos de privacidad.</span>
                 </label>
               </div>

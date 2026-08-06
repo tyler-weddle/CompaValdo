@@ -209,10 +209,12 @@ h1, h2, h3, .form-card h2 {
   box-sizing: border-box;
 }
 
-/* Input normalization and boundary constraints */
-.booking-form input, 
-.booking-form textarea,
-.date-input-wrapper {
+/* Target only text-based inputs for full-width styling (Excludes Checkbox) */
+.booking-form input[type="text"],
+.booking-form input[type="tel"],
+.booking-form input[type="email"],
+.booking-form input[type="number"],
+.booking-form textarea {
   box-sizing: border-box !important;
   width: 100% !important;
   max-width: 100% !important;
@@ -253,6 +255,11 @@ h1, h2, h3, .form-card h2 {
   flex-direction: column;
   gap: 2px;
   padding: 8px 12px !important;
+  background: #0a0a0a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  box-sizing: border-box !important;
+  width: 100% !important;
 }
 
 .input-label {
@@ -281,50 +288,58 @@ h1, h2, h3, .form-card h2 {
   margin: 0;
 }
 
-/* Fixed Checkbox & Compliance Label Alignment */
-.compliance-checkbox {
+/* Checkbox Container Fix */
+.checkbox-group {
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  font-size: 0.8rem;
-  color: var(--text-muted);
+  flex-direction: column;
+  width: 100%;
+  margin: 6px 0;
+}
+
+.compliance-checkbox {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 10px !important;
+  width: 100% !important;
   cursor: pointer;
   user-select: none;
-  margin: 6px 0;
-  text-align: left;
-  width: 100%;
-  box-sizing: border-box;
 }
 
 .compliance-checkbox span {
-  flex: 1;
-  line-height: 1.35;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-align: left;
+  line-height: 1.2;
 }
 
+/* Specific Checkbox Box Size Reset */
 .compliance-checkbox input[type="checkbox"] {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 18px;
-  height: 18px;
-  background: #0a0a0a;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  min-height: 18px !important;
+  background: #0a0a0a !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 4px !important;
+  padding: 0 !important;
+  margin: 0 !important;
   cursor: pointer;
-  display: grid;
+  display: grid !important;
   place-content: center;
   transition: all 0.2s ease;
-  position: relative;
-  flex-shrink: 0;
-  margin-top: 1px;
+  flex-shrink: 0 !important;
 }
 
 .compliance-checkbox:hover input[type="checkbox"] {
-  border-color: var(--accent-gold);
+  border-color: var(--accent-gold) !important;
 }
 
 .compliance-checkbox input[type="checkbox"]:checked {
-  background: rgba(225, 207, 126, 0.1);
-  border-color: var(--accent-gold);
+  background: rgba(225, 207, 126, 0.1) !important;
+  border-color: var(--accent-gold) !important;
 }
 
 .compliance-checkbox input[type="checkbox"]::before {
