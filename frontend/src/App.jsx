@@ -42,11 +42,11 @@ function App() {
   const [duration, setDuration] = useState(0);
   const audioRef = useRef(null);
 
-  // Featured song details
+  // Featured song details (.m4a file target)
   const songData = {
-    title: "“El Jabalí” (Cover) “En Vivo”",
-    artist: "Isidro Barajas x El Compa Valdo",
-    src: "/song1.m4a"
+    title: "Estilo CompaValdo",
+    artist: "El Compa Valdo",
+    src: "/song.m4a"
   };
 
   useEffect(() => {
@@ -60,6 +60,15 @@ function App() {
       videoRef.current.play().catch(e => console.log("Autoplay blocked:", e));
     }
   }, []);
+
+  // Reload audio element whenever song source changes
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.load();
+      setIsPlaying(false);
+      setCurrentTime(0);
+    }
+  }, [songData.src]);
 
   const socials = [
     { icon: <FaInstagram />, url: 'https://www.instagram.com/elcompavaldo_/', label: 'Instagram' },
@@ -76,15 +85,25 @@ function App() {
     return baseUrl.replace(/\/+$/, '');
   };
 
-  // Audio Player Handlers
-  const togglePlay = () => {
+  // Asynchronous Audio Toggle for .m4a compatibility
+  const togglePlay = async () => {
     if (!audioRef.current) return;
-    if (isPlaying) {
-      audioRef.current.pause();
-    } else {
-      audioRef.current.play().catch(err => console.log("Audio playback error:", err));
+
+    try {
+      if (isPlaying) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        if (audioRef.current.readyState === 0) {
+          audioRef.current.load();
+        }
+        await audioRef.current.play();
+        setIsPlaying(true);
+      }
+    } catch (err) {
+      console.error("Audio playback error:", err);
+      setIsPlaying(false);
     }
-    setIsPlaying(!isPlaying);
   };
 
   const handleTimeUpdate = () => {
@@ -296,10 +315,14 @@ function App() {
             <div className="center-music-card">
               <audio 
                 ref={audioRef} 
-                src={songData.src} 
                 onTimeUpdate={handleTimeUpdate} 
                 onEnded={() => setIsPlaying(false)}
-              />
+                preload="auto"
+                playsInline
+              >
+                <source src={songData.src} type="audio/mp4" />
+                <source src={songData.src} type="audio/x-m4a" />
+              </audio>
               
               <div className="music-card-header">
                 <div className="music-title-info">
@@ -421,6 +444,7 @@ function App() {
         </div>
       )}
 
+      {/* DEDICATED SUCCESS MODAL (NO CHECKMARK) */}
       {isSuccessModalOpen && (
         <div className="modal-backdrop" onClick={() => setIsSuccessModalOpen(false)}>
           <div className="form-card success-card" onClick={(e) => e.stopPropagation()}>
