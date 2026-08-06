@@ -176,6 +176,7 @@ h1, h2, h3, .form-card h2 {
   width: 100%;
   max-width: 480px;
   position: relative;
+  box-sizing: border-box;
 }
 
 .form-card h2 {
@@ -204,6 +205,8 @@ h1, h2, h3, .form-card h2 {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Input normalization and boundary constraints */
@@ -278,16 +281,24 @@ h1, h2, h3, .form-card h2 {
   margin: 0;
 }
 
+/* Fixed Checkbox & Compliance Label Alignment */
 .compliance-checkbox {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  align-items: flex-start;
+  gap: 10px;
   font-size: 0.8rem;
   color: var(--text-muted);
   cursor: pointer;
   user-select: none;
-  margin: 5px 0;
+  margin: 6px 0;
   text-align: left;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.compliance-checkbox span {
+  flex: 1;
+  line-height: 1.35;
 }
 
 .compliance-checkbox input[type="checkbox"] {
@@ -304,6 +315,7 @@ h1, h2, h3, .form-card h2 {
   transition: all 0.2s ease;
   position: relative;
   flex-shrink: 0;
+  margin-top: 1px;
 }
 
 .compliance-checkbox:hover input[type="checkbox"] {
@@ -341,6 +353,7 @@ h1, h2, h3, .form-card h2 {
   transition: background-color 0.2s;
   border-radius: 6px;
   padding: 14px 28px;
+  width: 100%;
 }
 
 .gold-button:hover {
@@ -360,6 +373,7 @@ h1, h2, h3, .form-card h2 {
   gap: 2px; 
   margin-bottom: 2px; 
   width: 100%;
+  box-sizing: border-box;
 }
 
 .field-error-msg {
