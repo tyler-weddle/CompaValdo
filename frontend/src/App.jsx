@@ -44,9 +44,9 @@ function App() {
 
   // Featured song details
   const songData = {
-    title: "Estilo CompaValdo",
-    artist: "El Compa Valdo",
-    src: "/song.mp3"
+    title: "“El Jabalí” (Cover) “En Vivo”",
+    artist: "Isidro Barajas x El Compa Valdo",
+    src: "/song1.m4a"
   };
 
   useEffect(() => {
@@ -421,7 +421,6 @@ function App() {
         </div>
       )}
 
-      {/* DEDICATED SUCCESS MODAL (NO CHECKMARK) */}
       {isSuccessModalOpen && (
         <div className="modal-backdrop" onClick={() => setIsSuccessModalOpen(false)}>
           <div className="form-card success-card" onClick={(e) => e.stopPropagation()}>
