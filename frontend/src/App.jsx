@@ -49,7 +49,7 @@ function App() {
 
   // Featured song details
   const songData = {
-    title: "“El Jabalí” (Cover) “En Vivo”",
+    title: "“Comandante Roque”",
     artist: "Isidro Barajas x El Compa Valdo",
     src: "/song1.m4a"
   };
