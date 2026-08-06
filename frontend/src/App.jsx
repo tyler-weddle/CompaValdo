@@ -49,9 +49,9 @@ function App() {
 
   // Featured song details
   const songData = {
-    title: "Estilo CompaValdo",
-    artist: "El Compa Valdo",
-    src: "/song.m4a"
+    title: "“El Jabalí” (Cover) “En Vivo”",
+    artist: "Isidro Barajas x El Compa Valdo",
+    src: "/song1.m4a"
   };
 
   useEffect(() => {
