@@ -275,6 +275,18 @@ app.post('/api/booking', bookingRateLimiter, async (req, res) => {
   }
 });
 
+// Database Keep-Alive Ping (Runs every 4 hours to prevent Aiven inactivity sleep)
+const FOUR_HOURS = 4 * 60 * 60 * 1000;
+
+setInterval(async () => {
+  try {
+    await db.query('SELECT 1');
+    console.log('⏰ Database keep-alive ping sent successfully.');
+  } catch (err) {
+    console.error('⚠️ Database keep-alive ping failed:', err.message);
+  }
+}, FOUR_HOURS);
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Backend validation server running on port ${PORT}`);
