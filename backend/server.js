@@ -9,7 +9,7 @@ const mysql = require('mysql2/promise');
 
 const app = express();
 
-// FIX 1: Tell Express to trust Render's reverse proxy for express-rate-limit
+// FIX 1: Trust Render's reverse proxy for express-rate-limit IP tracking
 app.set('trust proxy', 1);
 
 // 1. Helmet setup
@@ -59,15 +59,17 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
   );
 }
 
-// 4. Safe MariaDB Connection Pool Initialization (With Aiven SSL Support)
+// 4. Safe MariaDB/Aiven Connection Pool Initialization
 const getDbConfig = () => {
-  const url = process.env.DATABASE_URL;
+  let url = process.env.DATABASE_URL || '';
   
   if (url && !url.includes('USERNAME:PASSWORD')) {
-    // If using connection string, pass SSL options separately
+    // Strip inline ?ssl-mode parameters so mysql2 doesn't complain
+    url = url.split('?')[0];
+
     return {
       uri: url,
-      ssl: { rejectUnauthorized: false },
+      ssl: { rejectUnauthorized: false }, // Enforces SSL required by Aiven
       waitForConnections: true,
       connectionLimit: 10,
       queueLimit: 0
@@ -78,8 +80,8 @@ const getDbConfig = () => {
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'compavaldo',
-    port: Number(process.env.DB_PORT) || 3306,
+    database: process.env.DB_NAME || 'defaultdb',
+    port: Number(process.env.DB_PORT) || 10215,
     ssl: process.env.DB_HOST ? { rejectUnauthorized: false } : false,
     waitForConnections: true,
     connectionLimit: 10,
