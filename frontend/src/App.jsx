@@ -30,6 +30,11 @@ function App() {
 
   const [formData, setFormData] = useState({ name: '', phone: '', email: '', date: '', hours: '', details: '' });
   const [optIn, setOptIn] = useState(false);
+  
+  // Spam Prevention States
+  const [honeypot, setHoneypot] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [status, setStatus] = useState('');
   const [errors, setErrors] = useState({});
   const videoRef = useRef(null);
@@ -135,6 +140,9 @@ function App() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return; // Prevent duplicate submission triggers
+
+    setIsSubmitting(true);
     setErrors({});
     setStatus('Enviando...');
     
@@ -142,7 +150,7 @@ function App() {
       const response = await fetch(`${getBaseUrl()}/api/booking`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, smsOptIn: optIn }),
+        body: JSON.stringify({ ...formData, smsOptIn: optIn, website: honeypot }),
       });
       
       const data = await response.json();
@@ -150,6 +158,7 @@ function App() {
       if (data.success) {
         setStatus('');
         setFormData({ name: '', phone: '', email: '', date: '', hours: '', details: '' });
+        setHoneypot('');
         setOptIn(false);
         setIsModalOpen(false);
         setIsSuccessModalOpen(true);
@@ -158,12 +167,14 @@ function App() {
         if (data.errors) {
           setErrors(data.errors); 
         } else {
-          setStatus('Error al procesar la solicitud.');
+          setStatus(data.message || 'Error al procesar la solicitud.');
         }
       }
     } catch (err) { 
       console.error('Fetch error:', err);
       setStatus('Error de conexión.'); 
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -384,6 +395,18 @@ function App() {
             
             <form onSubmit={handleSubmit} className="booking-form" noValidate>
               
+              {/* INVISIBLE HONEYPOT SPAM TRAP */}
+              <div style={{ display: 'none', visibility: 'hidden' }} aria-hidden="true">
+                <input 
+                  type="text" 
+                  name="website" 
+                  tabIndex="-1" 
+                  autoComplete="off" 
+                  value={honeypot} 
+                  onChange={(e) => setHoneypot(e.target.value)} 
+                />
+              </div>
+
               <div className="form-group">
                 {errors.name && <p className="field-error-msg">{errors.name}</p>}
                 <input type="text" placeholder="Nombre" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
@@ -445,7 +468,15 @@ function App() {
                 </label>
               </div>
 
-              <button type="submit" className="gold-button">ENVIAR</button>
+              {/* SUBMIT BUTTON WITH DISABLE GUARD */}
+              <button 
+                type="submit" 
+                className="gold-button" 
+                disabled={isSubmitting}
+                style={{ opacity: isSubmitting ? 0.7 : 1, cursor: isSubmitting ? 'not-allowed' : 'pointer' }}
+              >
+                {isSubmitting ? 'ENVIANDO...' : 'ENVIAR'}
+              </button>
             </form>
             {status && <p className="status-banner">{status}</p>}
           </div>

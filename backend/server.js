@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const { Resend } = require('resend');
 const webpush = require('web-push');
 const mysql = require('mysql2/promise');
@@ -25,6 +26,18 @@ app.use(cors({
 
 app.use(express.json());
 
+// 3. Rate Limiter for Booking Endpoint (Max 5 requests per 15 minutes per IP)
+const bookingRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Limit each IP to 5 booking requests per window
+  message: {
+    success: false,
+    message: "Demasiadas solicitudes. Por favor intente de nuevo en 15 minutos."
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Verify API Key existence
 if (!process.env.RESEND_API_KEY) {
   console.error("FATAL ERROR: RESEND_API_KEY is not defined in environment variables.");
@@ -43,7 +56,7 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
   );
 }
 
-// 3. Safe MariaDB Connection Pool Initialization
+// 4. Safe MariaDB Connection Pool Initialization
 const getDbConfig = () => {
   const url = process.env.DATABASE_URL;
   if (url && !url.includes('USERNAME:PASSWORD')) {
@@ -128,9 +141,17 @@ app.post('/api/admin/subscribe', async (req, res) => {
   }
 });
 
-// Booking Endpoint
-app.post('/api/booking', async (req, res) => {
-  const { name, phone, email, date, hours, details, smsOptIn } = req.body;
+// Booking Endpoint (Protected with Rate Limiter)
+app.post('/api/booking', bookingRateLimiter, async (req, res) => {
+  const { name, phone, email, date, hours, details, smsOptIn, website } = req.body;
+
+  // 1. HONEYPOT CHECK (Invisible field filled by automated bots)
+  if (website) {
+    console.warn("⚠️ Spam bot caught by Honeypot trap. Drop request silently.");
+    // Return fake success so bots do not retry or attempt to adapt
+    return res.status(200).json({ success: true, message: "Booking received." });
+  }
+
   const errors = {}; 
 
   // SERVER-SIDE VALIDATION
