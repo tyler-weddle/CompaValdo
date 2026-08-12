@@ -9,6 +9,9 @@ const mysql = require('mysql2/promise');
 
 const app = express();
 
+// FIX 1: Tell Express to trust Render's reverse proxy for express-rate-limit
+app.set('trust proxy', 1);
+
 // 1. Helmet setup
 app.use(
   helmet({
@@ -56,11 +59,19 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
   );
 }
 
-// 4. Safe MariaDB Connection Pool Initialization
+// 4. Safe MariaDB Connection Pool Initialization (With Aiven SSL Support)
 const getDbConfig = () => {
   const url = process.env.DATABASE_URL;
+  
   if (url && !url.includes('USERNAME:PASSWORD')) {
-    return url;
+    // If using connection string, pass SSL options separately
+    return {
+      uri: url,
+      ssl: { rejectUnauthorized: false },
+      waitForConnections: true,
+      connectionLimit: 10,
+      queueLimit: 0
+    };
   }
   
   return {
@@ -69,6 +80,7 @@ const getDbConfig = () => {
     password: process.env.DB_PASSWORD || '',
     database: process.env.DB_NAME || 'compavaldo',
     port: Number(process.env.DB_PORT) || 3306,
+    ssl: process.env.DB_HOST ? { rejectUnauthorized: false } : false,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
@@ -145,10 +157,9 @@ app.post('/api/admin/subscribe', async (req, res) => {
 app.post('/api/booking', bookingRateLimiter, async (req, res) => {
   const { name, phone, email, date, hours, details, smsOptIn, website } = req.body;
 
-  // 1. HONEYPOT CHECK (Invisible field filled by automated bots)
+  // HONEYPOT CHECK
   if (website) {
     console.warn("⚠️ Spam bot caught by Honeypot trap. Drop request silently.");
-    // Return fake success so bots do not retry or attempt to adapt
     return res.status(200).json({ success: true, message: "Booking received." });
   }
 
@@ -218,26 +229,30 @@ app.post('/api/booking', bookingRateLimiter, async (req, res) => {
 
     // 2. Lock-Screen Web Push Notifications via MariaDB Subscriptions
     if (process.env.VAPID_PUBLIC_KEY) {
-      const [rows] = await db.query('SELECT endpoint, subscription_json FROM push_subscriptions');
+      try {
+        const [rows] = await db.query('SELECT endpoint, subscription_json FROM push_subscriptions');
 
-      if (rows.length > 0) {
-        const pushPayload = JSON.stringify({
-          title: "Nueva Reserva CompaValdo",
-          body: `${name} - ${date} (${hours} hrs). Tel: ${phone}`,
-          url: "/"
-        });
+        if (rows && rows.length > 0) {
+          const pushPayload = JSON.stringify({
+            title: "Nueva Reserva CompaValdo",
+            body: `${name} - ${date} (${hours} hrs). Tel: ${phone}`,
+            url: "/"
+          });
 
-        rows.forEach(row => {
-          const subscription = JSON.parse(row.subscription_json);
-          promises.push(
-            webpush.sendNotification(subscription, pushPayload).catch(async (err) => {
-              console.error("Failed to send push notification to device:", row.endpoint, err.statusCode);
-              if (err.statusCode === 410 || err.statusCode === 404) {
-                await db.execute('DELETE FROM push_subscriptions WHERE endpoint = ?', [row.endpoint]);
-              }
-            })
-          );
-        });
+          rows.forEach(row => {
+            const subscription = JSON.parse(row.subscription_json);
+            promises.push(
+              webpush.sendNotification(subscription, pushPayload).catch(async (err) => {
+                console.error("Failed to send push notification to device:", row.endpoint, err.statusCode);
+                if (err.statusCode === 410 || err.statusCode === 404) {
+                  await db.execute('DELETE FROM push_subscriptions WHERE endpoint = ?', [row.endpoint]);
+                }
+              })
+            );
+          });
+        }
+      } catch (dbErr) {
+        console.error("⚠️ Could not query push subscriptions from MariaDB:", dbErr.message);
       }
     }
 
