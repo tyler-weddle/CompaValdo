@@ -3,6 +3,7 @@ import {
   FaInstagram, FaYoutube, FaSpotify, FaApple, FaPlay, FaPause, FaTimes 
 } from 'react-icons/fa';
 import './App.css';
+import { Analytics } from "@vercel/analytics/next"
 
 // Helper to convert base64 VAPID string into Uint8Array buffer for PushManager
 function urlBase64ToUint8Array(base64String) {
